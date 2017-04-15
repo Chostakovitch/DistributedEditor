@@ -1,0 +1,62 @@
+# license type: free of charge license for academic and research purpose
+# see license.txt
+# author: Bertrand Ducourthial
+
+# Configuration file for layer 2 generic Makefile.
+# This file is standard for all applications
+#  - distributed in the skeleton distribution (the nest)
+#  - not distributed in the binary distribution (or as binary package)
+#    (Application that does not require compilation)
+
+
+### APPLICATION DEPENDENT VARIABLES ############################################
+
+#-- TCLTK APPLICATION COMPONENTS ----------------------------------------------#
+# NB: adding a new module or a new file to the application does not require
+#     to adapt the variables values below providing the file has been named
+#     according to the rule: nameoftheapplication-nameofthemodule.tk
+
+# RC is either empty or equal to rc-$(OUTPUT).tk if it exists
+RC = $(shell if [ -e rc-$(OUTPUT).tk ] ; then echo rc-$(OUTPUT).tk ; else echo "" ; fi )
+
+# LIB is either empty or equal to libapg-app-$(OUTPUT).tk if it exists
+LIB = $(shell if [ -e libapg-app-$(OUTPUT).tk ] ; then echo libapg-app-$(OUTPUT).tk ; else echo "" ; fi )
+
+# SOURCES stands for all sources files belonging to the application
+# NB : wildcard does the immediat expansion.
+SOURCES = $(wildcard $(OUTPUT)*.tk) $(RC) $(LIB) 
+
+
+#-- FILES FOR APPLICATION PACKAGING--------------------------------------------#
+
+# List of all files for the public archive
+# NB: any file in the bin/doc/icons or input subdirectory of the application
+#     will be installed (with symlink) in the bin/doc/icons or input/$(OUTPUT)
+#     of the distribution.
+# NB: if one of these subdirectories is listed here while they do not exist,
+#     it is ignored silently.
+# NB: Be aware to add directory_name/* (such as bin/*) and not directory_name
+#     nor directory_name/ 
+#
+TGZ_PUB = \
+	Makefile Makefile-var Makefile-bin \
+	license.txt \
+	README.pub \
+	tgz-history.txt \
+	$(SOURCES) \
+	bin/* \
+	doc/* \
+	input/* \
+	icons/*
+
+# List of all files for the devel archive
+TGZ_DEV = $(TGZ_PUB) \
+	README.dev \
+	icon/*obj
+
+# List of all files for the distribution skeleton archive
+TGZ_SKL = $(TGZ_PUB)
+
+# List of all files for the binary distribution
+TGZ_BIN =
+

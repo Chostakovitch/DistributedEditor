@@ -1,0 +1,135 @@
+#!/bin/sh
+# the next line restarts using wish \
+exec wish "$0" "$@"
+
+#    whe
+#    an airplug compatible program
+#    author: Bertrand Ducourthial AT utc.fr
+#    license type: free of charge license for academic and research purpose
+#    see license.txt
+
+# An example of application using communication type whatwhowhere
+
+### INITIALISATION STANDARD DE L'APPLICATION COMPATIBLE AIRPLUG ###############
+# nom standard de l'application (nom du rep. dans la distribution)
+# trois lettres majuscules pour APP, trois lettres minuscules pour app
+set APP "WHE"
+set app "whe"
+
+# Recuperation de la valeur de la variable d'environnement APG_PATH,
+# qui indique le repertoire de la distribution AIRPLUG
+# et de la variable APG_LANG qui indique la langue a utiliser.
+if { [ catch {
+		set APG_PATH $env(APG_PATH)
+		set APG_LANG $env(APG_LANG)
+    set libapgfile [open $APG_PATH/LIBAPGTK/LIBAPGTK/libapg.tk r]
+    close $libapgfile
+    
+} ] } {
+    if { [info exists APG_PATH] == 0 } {
+				set APG_PATH "??"
+    }
+    if { [info exists APG_LANG] == 0 } {
+				set APG_LANG "english"
+    }
+		if { $APG_LANG == "french" } {
+				puts stderr "\n\033\[1;31m- $::app\(local\): libapg.tk non trouvee\n \
+                         Verifier l'installation. APG_PATH=$APG_PATH\n \
+                         Se placer dans le repertoire bin, faire source config.sh\n \
+                         Se reporter a la documentation en ligne. Contacter l'equipe Airplug.\
+                         \033\[0;00m\n"
+		} else {
+				puts stderr "\n\033\[1;31m- $::app\(local\): libapg.tk not found\n \
+                         Check the installation. APG_PATH=$APG_PATH\n \
+                         In the bin directory, type source config.sh\n \
+                         See the on-line documentation. Contact the Airplug team.\
+                         \033\[0;00m\n"
+		}				
+    exit
+} else {
+    source $APG_PATH/LIBAPGTK/LIBAPGTK/libapg.tk
+		if { $APG_LANG == "french" } {
+				APG_vrb_dispnotif "utilisation de la distribution airplug $APG_PATH"
+		} else {
+				APG_vrb_dispnotif "using the Airplug distribution $APG_PATH"
+		}
+}
+###############################################################################
+	      
+### SURCHARGE DE VARIABLES ####################################################
+set APP_apropos \
+"WHE v0.3
+application template for whatwhowhere communications
+Bertrand Ducourthial AT utc.fr
+Lab. Heudiasyc, UMR CNRS 6599
+Universite de Technologie de Compiegne
+See license.txt"
+set APP_help \
+"
+Application template for whatwhowhere communications
+"
+###############################################################################
+
+### LECTURE FICHIERS APPLICATIONS + AFFICHAGE ZONES ###########################
+## Lecture des fichiers composant l'application
+source $PATH/whe-snd.tk
+source $PATH/whe-rcv.tk
+source $PATH/whe-svg.tk
+
+## Ajout des zones crees, avec option affichage
+APG_int_addzone whesnd "Emissions" 1
+APG_int_addzone whercv "Receptions" 1
+
+## Affichage des zones
+APG_int_displayzones
+###############################################################################
+
+
+### PROCEDURES DE DEMARRAGE SPECIFIQUES DE L'APPLICATION #######################
+## Procedure appelee au demarrage
+proc WHE_start { } {
+
+		APG_vrb_dispnotif "Starting WHE" "WHE_start" 3
+    
+
+    # Abonnements
+		#   WHE doit s'abonner a elle meme
+		#   (en communication de type whatwho et whatwhowhere)
+		APG_begin_air "WHE"
+		#   Pour tester les abonnements entre applications, decommenter les
+		#   lignes suivantes
+		# APG_begin_air "WHA"
+		# APG_begin_air "WHO"
+
+    # Le bouton Envoyer de la zone d'emission devient "actif"
+    .whesnd.bt configure -state active
+    
+    # Touche entree sur les sous-zones de saisies => emission
+    bind .whesnd.msg.v <Return> {
+				.whesnd.bt configure -relief sunken
+				APG_send_whatwhowhere $WHE_snd_msg $WHE_snd_app $WHE_snd_hst
+				after 10 {  .whesnd.bt configure -relief raised }
+    }
+    bind .whesnd.app.v <Return> {
+				.whesnd.bt configure -relief sunken
+				APG_send_whatwhowhere $WHE_snd_msg $WHE_snd_app $WHE_snd_hst
+				after 10 {  .whesnd.bt configure -relief raised }
+    }
+    bind .whesnd.hst.v <Return> {
+				.whesnd.bt configure -relief sunken
+				APG_send_whatwhowhere $WHE_snd_msg $WHE_snd_app $WHE_snd_hst
+				after 10 {  .whesnd.bt configure -relief raised }
+    }
+}
+
+## Procedure appelle a la fin
+proc WHE_stop { } {
+		APG_vrb_dispnotif "Stopping WHE" "WHE_stop" 3
+}
+###############################################################################
+
+### INITIALISATION DU DEMARRAGE ################################################
+APG_init
+
+
+

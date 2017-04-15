@@ -1,0 +1,42 @@
+#    whe
+#    an airplug compatible program
+#    author: Bertrand Ducourthial AT utc.fr
+#    license type: free of charge license for academic and research purpose
+#    see license.txt
+### MODULE RECEPTION ##########################################################
+
+
+### VARIABLES DU MODULE #######################################################
+# dernier message recu
+set WHE_rcv_msg $APG_msg_unknown
+set WHE_rcv_app $APG_msg_unknown
+set WHE_rcv_hst $APG_msg_unknown
+###############################################################################
+
+### ZONE DU MODULE ############################################################
+labelframe .whercv -pady 2 -padx 2 \
+    -text "Réception \[$APP, ident = $APG_ident\]"  -fg $APG_int_coltitle
+label .whercv.msg -textvariable WHE_rcv_msg -width 64 -relief ridge
+label .whercv.app -textvariable WHE_rcv_app -width 4 -relief ridge
+label .whercv.hst -textvariable WHE_rcv_hst -width 4 -relief ridge
+pack .whercv.msg -side left -pady 2 -expand true -fill both
+pack .whercv.app .whercv.hst -side left -fill y -pady 2 -expand false
+###############################################################################
+
+
+### PROCEDURE DU MODULE #######################################################
+
+#-- Procedure APG_receive_whatwhowhere ---------------------------------------#
+# Action : reception d'un message                                             #
+# Remarq : Surcharge de la procedure de LIBAPGTK                              #
+# Entree : le payload what, l'app emettrice who, la zone where                #
+# Retour : rien                                                               #
+#-----------------------------------------------------------------------------#
+proc APG_receive_whatwhowhere { what who where } {
+    set ::WHE_rcv_msg $what
+    set ::WHE_rcv_app $who
+    set ::WHE_rcv_hst $where
+
+    update
+}
+###############################################################################

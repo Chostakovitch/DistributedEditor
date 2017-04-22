@@ -14,3 +14,15 @@ set HLG_rc_lamh 0
 
 # Mnémonique pour le header HLG, contenant la valeur de l'horloge de Lamport
 set HLG_rc_mnenoclk "hlgclk"
+
+# Mnémonique Payload
+set HLG_rc_mnemopayload "payload"
+
+# Mot cle contenu dans le payload declenchant le snap (emis par l'app de base)
+set HLG_rc_is_asking_snap "SNAP"
+
+# Mnémonique pour le header HLG, contenant la valeur pour le snap
+set HLG_rc_mnemosnp "hlgsnp"
+
+# Couleur correspondant a l'algo de lestage pour le snap
+set HLG_rc_color_snap "BLANC"

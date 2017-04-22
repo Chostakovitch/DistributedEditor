@@ -1,0 +1,65 @@
+#    bas-snp.tk
+#    a library for designing airplug compatible program
+#    authors: Groupe SR05
+#    license type: free of charge license for academic and research purpose
+#    see license.txt
+#
+#
+### SNAPSHOT LIBRARY ############################################################
+
+## VARIABLES ##################################################################
+# Descripteur du fichier de sauvegarde pour le snapshot
+# NB : si non nul, un fichier est ouvert.
+set ::APG_snp_fd ""
+
+# Nom du fichier de sauvegarde
+# NB : nouveau nom genere a chaque lancement de la procedure de snapshot.
+
+set ::APG_snp_filename $::APG_PATH/snapshot/$::app/svg-$::APG_ident-[clock format [clock scan now] -format "%Y-%m-%d-%H-%M-%S"].$::app
+
+# Delimiteur de champs dans le tableur
+# NB : permet de recuperer les donnees sauvegardees directement dans des colonnes
+#      separees.
+set ::APG_snp_delim ":"
+
+###############################################################################
+
+
+## ZONE GRAPHIQUE POUR LE SNAPSHOT ##########################################
+if { $::APG_notk == true } {
+    APG_vrb_dispnotif "  option notk => pas de creation de la zone d'interface de snapshot" "bas-snp.tk" 5
+} else {
+
+		labelframe .snp -pady 2 -padx 2 -text "Snapshot" -fg $::APG_int_coltitle
+			button .snp.btstart -text "Lancer le snap" \
+				-activebackground $::APG_int_colbutton \
+				-foreground $::APG_int_colbutton \
+				-font $::APG_int_fnbutton \
+				-width 8 \
+				-command APG_snp_btstart
+
+		labelframe .snp.fn -text "Nom du fichier"
+		label .snp.fn.v -text $::APG_snp_filename 
+
+		pack .snp.fn.v		
+		pack .snp.btstart -side left -fill both -pady 2 -expand false
+		pack .snp.fn   -side left -fill x -pady 2 -expand true
+}
+
+###############################################################################
+
+
+## PROCEDURES DE L'INTERFACE ##################################################
+# Ces procedures ne devraient pas etre directement appelees par les
+# applications.
+
+#-- Procedure APG_svg_btstart ------------------------------------------------#
+# Action : procedure associee au bouton Départ/Fin des sauvegardes. Permet de #
+#          gerer manuellement le flag APG_saving. Selon sa valeur, lance      #
+#          ou stoppe les sauvegardes.                                         #
+# Entree : rien                                                               #
+# Retour : rien                                                               #
+#-----------------------------------------------------------------------------#
+proc APG_snp_btstart { } {
+	APG_vrb_dispdebug "received clock: $HLG_lam_h"
+}

@@ -19,6 +19,19 @@ set HLG_rcv_mnemoapp $HLG_rc_mnemoapp
 # Mnémonique pour le header HLG, contenant la valeur de l'horloge de Lamport
 set HLG_rcv_mnenoclk $HLG_rc_mnenoclk
 
+# Mnémonique Payload
+set HLG_rcv_mnemopayload $HLG_rc_mnemopayload
+
+# Mot cle contenu dans le payload declenchant le snap 
+set HLG_rcv_is_asking_snap $HLG_rc_is_asking_snap
+
+# Mnémonique pour le header HLG, contenant la valeur pour le snap
+set HLG_rcv_mnemosnp $HLG_rc_mnemosnp 
+
+# Couleur rouge/blanc pour l'inplémentation de l'algo avec lestage
+set HLG_rcv_color_snap $HLG_rc_color_snap
+
+
 ###############################################################################
 
 
@@ -61,19 +74,52 @@ foreach option $APG_lstargs {
 
 ### PROCEDURES DU MODULE ######################################################
 
+#SURCHARGE
+#-- Procedure APG_svg_formatlastdata -----------------------------------------#
+# Action : formate la derniere ecriture dans le fichier. Permet par exemple   #
+# de sauvegarder des calculs finaux, des moyennes...                          #
+# Entree : rien                                                               #
+# Retour : donnee formatee, qui sera ecrite dans le fichier de sauvegarde.    #
+#-----------------------------------------------------------------------------#
+proc APG_svg_formatlastdata { } {
+    return "END"
+}
+#SURCHARGE
+#-- Procedure APG_svg_formatfirstdata ----------------------------------------#
+# Action : formate l'entete du fichier de sauvegarde. Permet par exemple de   #
+# mettre des titres de colonnes lors d'une post-analyse dans un tableur, ou   #
+# sauvegarder les conditions de l'execution (parametres)                      #
+# Remarq : devrait etre surchargee dans l'application.                        #
+# Entree : rien                                                               #
+# Retour : donnee formatee, qui sera ecrite dans le fichier de sauvegarde.    #
+#-----------------------------------------------------------------------------#
+#TODO : rajouter la variable partagee dans le snap
+proc APG_svg_formatfirstdata { } {
+    return "Date $::APG_svg_delim $::HLG_lam_h"
+}
+#-- Procedure BAS_snp_btsnp --------------------------------------------------#
+# Action : gere la realisation du snapshot                                    #
+# Entree : rien                                                               #
+# Retour : rien                                                               #
+#-----------------------------------------------------------------------------#
+proc HLG_take_snap { } {
+	APG_svg_start
+	APG_svg_stop
+}
 #-- Procedure APG_receive_whatwho --------------------------------------------#
 # Action : gere la reception de messages                                      #
 # Remarq : surcharge de LIBAPGTK                                              #
 # Entree : payload et emetteur                                                #
 # Retour : rien                                                               #
 #-----------------------------------------------------------------------------#
+
 proc APG_receive_whatwho { what who } {
 
 		# Mise a jour de l'interface du module rcv.
     set ::HLG_rcv_msg $what
     set ::HLG_rcv_app $who
 
-		# Traitement different selon l'emetteur.
+	# Traitement different selon l'emetteur.
     switch -- $::HLG_rcv_app \
 				$::APP {
 						# Reception d'un message d'une application HLG distante,
@@ -86,16 +132,27 @@ proc APG_receive_whatwho { what who } {
 						# Récupération de la valeur de l'horloge de Lamport de l'émetteur
 						set h_rcv [APG_msg_splitstr what $::HLG_rcv_mnenoclk]
 
+						set snap_rcv [APG_msg_splitstr what $::HLG_rcv_mnemosnp]
+ 						
+						# Si la couleur du message est rouge et que la couleur du site
+						# est blanc, alors le site prend un snapshot
+						if {$snap_rcv == "ROUGE" && $::HLG_rcv_color_snap == "BLANC" } {
+						    set ::HLG_rcv_color_snap "ROUGE"
+						    HLG_take_snap
+						    # Transmission de la demande aux HLG voisins 
+						    HLG_snd_send $what $::APP
+
+						} 
 						# Mise à jour de l'horloge locale
 						HLG_lam_update $h_rcv
 
 						# Affichage de debug
 						APG_vrb_dispdebug "received clock: $h_rcv" "APG_receive_whatwho"
-
+ 
 						# Recuperation eventuelle d'autres champs.
 
 						# Ajout eventuel de traitements ici.
-
+ 
 						# Recuperation du message qui a ete concatene au header
 						# a l'emission. HLG_rcv_mnemoclk doit etre le dernier mnemonique
 						# avant le message concatene. Adapter si des champs ont ete ajoutes.
@@ -113,12 +170,19 @@ proc APG_receive_whatwho { what who } {
 						
 						# Ajout eventuel de traitements ici.
 
-
 						# Creation d'un header contenant l'application emettrice.
 						# Utilisation d'un mnemonique pour retrouver ce champs
 						# facilement a la reception.
 						set header [APG_msg_createmsg $::HLG_rcv_mnemoapp $who]
-
+						
+						# On regarde si le payload correspond à une demande de snapshot
+						set is_asking_snap [APG_msg_splitstr what $::HLG_rcv_mnemopayload]
+						if {$is_asking_snap == "SNAP"} {
+						    APG_vrb_dispdebug "*-SNAPSHOT-*"
+						    # Couleur associée à la demande de snapshot
+						    APG_msg_addmsg header $::HLG_rcv_mnemosnp "ROUGE"
+						} 
+							
 						#Ajout du champ de l'horloge de Lamport dans le header
 						APG_msg_addmsg header $::HLG_rcv_mnenoclk [HLG_lam_incrandget]
 
@@ -131,6 +195,8 @@ proc APG_receive_whatwho { what who } {
 						# vers d'autres applications HLG (cette procedure permet de mettre
 						# a jour l'interface du module snd). NB : $::APP = "HLG".
 						HLG_snd_send $msg $::APP
+	
 				}
-}
 
+
+}

@@ -23,3 +23,6 @@ set BAS_rc_mnemopayload "payload"
 
 # Mnemonique pour retrouver le numero de sequence dans les messages
 set BAS_rc_mnemonseq "nseq"
+
+# Mot cle contenu dans le payload declenchant le snap 
+set BAS_rc_asking_snap "SNAP"

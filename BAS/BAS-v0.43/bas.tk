@@ -85,11 +85,12 @@ Usage :
 source $PATH/rc-bas.tk
 source $PATH/bas-snd.tk
 source $PATH/bas-rcv.tk
-source $PATH/bas-svg.tk
+source $PATH/bas-snp.tk
 
 ## Ajout des zones crees, avec option d'affichage
 APG_int_addzone snd "Emissions" 1
 APG_int_addzone rcv "Receptions" 1
+APG_int_addzone snp "Snapshots" 1
 
 ## Affichage des zones
 APG_int_displayzones

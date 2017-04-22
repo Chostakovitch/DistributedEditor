@@ -1,0 +1,64 @@
+#    bas
+#    an airplug compatible program
+#    author: Bertrand Ducourthial AT utc.fr, Anthony Buisset (v0.1)
+#    license type: free of charge license for academic and research purpose
+#    see license.txt
+### MODULE SNAPSHOT ##########################################################
+
+
+### VARIABLES DU MODULE #######################################################
+# Descripteur du fichier de sauvegarde pour le snapshot
+# NB : si non nul, un fichier est ouvert.
+set ::APG_snp_fd ""
+
+# Mot cle contenu dans le payload declenchant le snap 
+set ::BAS_snp_msg $BAS_rc_asking_snap 
+
+# Nom du fichier de sauvegarde
+# NB : nouveau nom genere a chaque lancement de la procedure de snapshot.
+
+set ::APG_snp_filename $::APG_PATH/output/$::app/snp-$::APG_ident-[clock format [clock scan now] -format "%Y-%m-%d-%H-%M-%S"].$::app
+
+# Delimiteur de champs dans le tableur
+# NB : permet de recuperer les donnees sauvegardees directement dans des colonnes
+#      separees.
+set ::APG_snp_delim ":"
+
+###############################################################################
+
+
+### ZONE DU MODULE ############################################################
+labelframe .snp -pady 2 -padx 2 -text "Snapshot"  -fg $APG_int_coltitle
+	button .snp.btsnp -text "Snap" \
+		-activebackground $APG_int_colbutton \
+		-foreground $APG_int_colbutton \
+		-font $APG_int_fnbutton \
+		-width 10 \
+		-command BAS_snp_btsnp
+
+pack .snp.btsnp -side left
+###############################################################################
+
+
+
+### PROCEDURES DU MODULE ######################################################
+
+#-- Procedure BAS_snp_btsnp --------------------------------------------------#
+# Action : envoie d'un message pour la realisation du snapshot                #
+# Entree : rien                                                               #
+# Retour : rien                                                               #
+#-----------------------------------------------------------------------------#
+proc BAS_snp_btsnp { } {
+    
+		# Incrementation du numero de message
+		incr ::BAS_snd_nseq
+
+    		# Creation du message -> payload = SNAP
+  		set msg [APG_msg_createmsg $::BAS_snd_mnemopayload $::BAS_snp_msg]
+
+		# Ajout du numero de sequence
+		APG_msg_addmsg msg $::BAS_snd_mnemonseq $::BAS_snd_nseq
+
+   		APG_send_whatwho $msg $::BAS_snd_app
+}
+

@@ -24,10 +24,9 @@ set BAS_rc_mnemopayload "payload"
 # Mnemonique pour retrouver le numero de sequence dans les messages
 set BAS_rc_mnemonseq "nseq"
 
-<<<<<<< HEAD
 # Mot cle contenu dans le payload declenchant le snap 
 set BAS_rc_asking_snap "SNAP"
-=======
+
 # Mnemonique pour retrouver le type de message
 set BAS_rc_mnemotype "type"
 
@@ -48,4 +47,4 @@ set BAS_rc_leavesc "Sortir de SC"
 
 # Texte par défaut de la variable partagée
 set BAS_rc_sharedvalue "Texte à accès exclusif"
->>>>>>> 7334b90dd9154ea87c38d2675494713351722334
+

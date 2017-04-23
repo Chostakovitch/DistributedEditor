@@ -23,6 +23,12 @@ set BAS_snd_mnemopayload $BAS_rc_mnemopayload
 # Mnemonique pour retrouver le numero de sequence dans les messages
 set BAS_snd_mnemonseq $BAS_rc_mnemonseq
 
+# Mnemonique pour retrouver le type de message
+set BAS_snd_mnemotype $BAS_rc_mnemotype
+
+# Indique un type de message standard
+set BAS_snd_typemsg $BAS_rc_typemsg
+
 # Demande de depart automatique des emissions periodiques
 # NB : peut etre change par l'option --autosend
 set BAS_snd_autosend false
@@ -125,17 +131,20 @@ proc BAS_snd_btauto { } {
 #-----------------------------------------------------------------------------#
 proc BAS_snd_autosend { } {
     
-		# Incrementation du numero de message
-		incr ::BAS_snd_nseq
+	# Incrementation du numero de message
+	incr ::BAS_snd_nseq
 
-    # Creation du message formate
-    set msg [APG_msg_createmsg $::BAS_snd_mnemopayload $::BAS_snd_msg]
+    # Creation du message de type "standard" (communication)
+    set msg [APG_msg_createmsg $::BAS_snd_mnemotype $::BAS_snd_typemsg]
 
-		# Ajout du numero de sequence
-		APG_msg_addmsg msg $::BAS_snd_mnemonseq $::BAS_snd_nseq
+    # Ajout du contenu du message
+    APG_msg_addmsg msg $::BAS_snd_mnemopayload $::BAS_snd_msg
+
+	# Ajout du numero de sequence
+	APG_msg_addmsg msg $::BAS_snd_mnemonseq $::BAS_snd_nseq
 
     APG_send_whatwho $msg $::BAS_snd_app
 		
-		after $::BAS_snd_delay BAS_snd_autosend
+	after $::BAS_snd_delay BAS_snd_autosend
 }
 

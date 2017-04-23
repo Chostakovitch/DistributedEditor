@@ -23,3 +23,24 @@ set BAS_rc_mnemopayload "payload"
 
 # Mnemonique pour retrouver le numero de sequence dans les messages
 set BAS_rc_mnemonseq "nseq"
+
+# Mnemonique pour retrouver le type de message
+set BAS_rc_mnemotype "type"
+
+# Indique un type de message standard
+set BAS_rc_typemsg "msg"
+
+# Indique un type de message de demande d'entrée en section critique
+set BAS_rc_typeesc "entersc"
+
+# Indique un type de message de sortie de section critique
+set BAS_rc_typelsc "leavesc"
+
+# Texte du bouton pour entrer en section critique
+set BAS_rc_entersc "Entrer en SC"
+
+# Texte du bouton pour sortir de section critique
+set BAS_rc_leavesc "Sortir de SC"
+
+# Texte par défaut de la variable partagée
+set BAS_rc_sharedvalue "Texte à accès exclusif"

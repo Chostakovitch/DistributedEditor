@@ -85,12 +85,21 @@ Usage :
 source $PATH/rc-bas.tk
 source $PATH/bas-snd.tk
 source $PATH/bas-rcv.tk
+<<<<<<< HEAD
 source $PATH/bas-snp.tk
+=======
+source $PATH/bas-svg.tk
+source $PATH/bas-shared.tk
+>>>>>>> 7334b90dd9154ea87c38d2675494713351722334
 
 ## Ajout des zones crees, avec option d'affichage
 APG_int_addzone snd "Emissions" 1
 APG_int_addzone rcv "Receptions" 1
+<<<<<<< HEAD
 APG_int_addzone snp "Snapshots" 1
+=======
+APG_int_addzone shared "Variable" 1
+>>>>>>> 7334b90dd9154ea87c38d2675494713351722334
 
 ## Affichage des zones
 APG_int_displayzones

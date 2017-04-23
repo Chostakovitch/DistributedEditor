@@ -43,9 +43,10 @@ pack .rcv.t1 .rcv.app .rcv.t2 .rcv.msg .rcv.t3 .rcv.nseq -side left -fill y -pad
 #-----------------------------------------------------------------------------#
 proc APG_receive_whatwho { what who } {
     # Recuperation du payload et mise a jour affichage
+    set ::BAS_rcv_type [APG_msg_splitstr what $::BAS_snd_mnemotype]
     set ::BAS_rcv_msg  [APG_msg_splitstr what $::BAS_snd_mnemopayload]
     set ::BAS_rcv_nseq  [APG_msg_splitstr what $::BAS_snd_mnemonseq]
     set ::BAS_rcv_app $who
-    APG_vrb_dispdebug "what = $what, who=$::BAS_rcv_app, payload=$::BAS_rcv_msg" "APG_receive_what"
+    APG_vrb_dispdebug "type = $::BAS_rcv_type, what = $what, who=$::BAS_rcv_app, payload=$::BAS_rcv_msg" "APG_receive_what"
 }
 

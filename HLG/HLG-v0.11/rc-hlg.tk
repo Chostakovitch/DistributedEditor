@@ -26,3 +26,15 @@ set HLG_rc_mnemosnp "hlgsnp"
 
 # Couleur correspondant a l'algo de lestage pour le snap
 set HLG_rc_color_snap "BLANC"
+
+# Mnemonique pour retrouver le type de message
+set HLG_rc_mnemotype "type"
+
+# Indique un type de message standard
+set HLG_rc_typemsg "msg"
+
+# Indique un type de message de demande d'entrée en section critique
+set HLG_rc_typeesc "entersc"
+
+# Indique un type de message de sortie de section critique
+set HLG_rc_typelsc "leavesc"

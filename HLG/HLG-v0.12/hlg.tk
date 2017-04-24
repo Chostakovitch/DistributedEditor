@@ -2,7 +2,7 @@
 # the next line restarts using wish \
 exec wish "$0" "$@"
 
-#    net
+#    hlg
 #    an airplug compatible program
 #    author: Bertrand Ducourthial AT utc.fr, Anthony Buisset (v0.1)
 #    license type: free of charge license for academic and research purpose
@@ -13,8 +13,8 @@ exec wish "$0" "$@"
 ### INITIALISATION STANDARD DE L'APPLICATION COMPATIBLE AIRPLUG ###############
 # nom standard de l'application (nom du rep. dans la distribution)
 # trois lettres majuscules pour APP, trois lettres minuscules pour app
-set APP "NET"
-set app "net"
+set APP "HLG"
+set app "hlg"
 
 # Recuperation de la valeur de la variable d'environnement APG_PATH,
 # qui indique le repertoire de la distribution AIRPLUG
@@ -59,7 +59,7 @@ if { [ catch {
 	      
 ### SURCHARGE DE VARIABLES ####################################################
 set APP_msgapropos \
-"NET v0.3
+"HLG v0.3
 application template (control application for teaching)
 Bertrand Ducourthial AT utc.fr
 Lab. Heudiasyc, UMR CNRS 6599
@@ -70,25 +70,24 @@ set APP_msghelp \
 "
 
 Exemple d'utilisation :
- ./bas.tk --dest=NET --whatwho --ident=writter --auto | ./net.tk --whatwho --ident=writter --verbose=5 | ./net.tk --whatwho --ident=reader| ./bas.tk --ident=reader --whatwho
+ ./bas.tk --dest=HLG --whatwho --ident=writter --auto | ./hlg.tk --whatwho --ident=writter --verbose=5 | ./hlg.tk --whatwho --ident=reader| ./bas.tk --ident=reader --whatwho
 "
 ###############################################################################
 
 
 ### LECTURE FICHIERS APPLICATIONS + AFFICHAGE ZONES ###########################
 ## Lecture des fichiers composant l'application
-source $PATH/rc-net.tk
-source $PATH/net-snd.tk
-source $PATH/net-rcv.tk
-source $PATH/net-svg.tk
-source $PATH/net-vec.tk
-source $PATH/net-sna.tk
+source $PATH/rc-hlg.tk
+source $PATH/hlg-snd.tk
+source $PATH/hlg-rcv.tk
+source $PATH/hlg-svg.tk
+source $PATH/hlg-lam.tk
+source $PATH/hlg-mtx.tk
 
 ## Ajout des zones crees, avec option d'affichage
 APG_int_addzone rcv "Réceptions" 1
 APG_int_addzone snd "Emissions" 1
-APG_int_addzone vec "Horloge vectorielle locale" 1
-APG_int_addzone sna "Sauvegarde" 1
+APG_int_addzone lam "Lamport's clock" 1
 
 ## Affichage des zones
 APG_int_displayzones
@@ -96,28 +95,28 @@ APG_int_displayzones
 
 
 
-#-- Procedure NET_start ------------------------------------------------------#
+#-- Procedure HLG_start ------------------------------------------------------#
 # Action : gere le depart de l'application.                                   #
 # Entree : rien                                                               #
 # Retour : rien                                                               #
 #-----------------------------------------------------------------------------#
-proc NET_start { } {
+proc HLG_start { } {
 
-		APG_vrb_dispnotif "Starting NET" "NET_start" 3
+		APG_vrb_dispnotif "Starting HLG" "HLG_start" 3
 
 		# abonnement a l'application locale BAS
 		APG_begin_lch "BAS"
-		# abonnement a l'application distance NET
+		# abonnement a l'application distance HLG
 		APG_begin_air $::APP
 }
 
-#-- Procedure NET_stop -------------------------------------------------------#
+#-- Procedure HLG_stop -------------------------------------------------------#
 # Action : gere la fin de l'application.                                      #
 # Entree : rien                                                               #
 # Retour : rien                                                               #
 #-----------------------------------------------------------------------------#
-proc NET_stop { } {
-		APG_vrb_dispnotif "Stopping NET" "NET_stop" 3
+proc HLG_stop { } {
+		APG_vrb_dispnotif "Stopping HLG" "HLG_stop" 3
 
     # arret d'une eventuelle sauvegarde en cours
 	  APG_svg_stop

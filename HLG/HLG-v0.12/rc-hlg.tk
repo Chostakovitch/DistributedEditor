@@ -1,0 +1,68 @@
+#    hlg
+#    an airplug compatible program
+#    author: pmarillo, hlg from NET-v0.31
+#    license type: free of charge license for academic and research purpose
+#    see license.txt
+###############################################################################
+
+# Mnemonique pour le header HLG, contenant le nom de l'application qui a emis
+# le message transporte.
+set HLG_rc_mnemoapp "apphlg"
+
+# Nom par defaut de l'appli distante :
+set HLG_rc_basdefault "BAS"
+
+# Setting for module hlg-lam.tk #############################################
+# Initial value of the Lamport's clock
+set HLG_rc_lamh 0
+
+###################### module hlg-mtx.tk #############################################
+
+# Enumeration des differentes valeurs du champ mutex pour tab, et pour les messages HLG <-> HLG et HLG <-> BAS :
+# # Nul : message sans rapport avec le mutex (HLG <-> HLG et HLG <-> BAS) :
+set HLG_mtx_nul "nul"
+# # Upd : mise a jour de la SC (HLG <-> BAS) :
+set HLG_mtx_upd "upd"
+# # Req : demande de SC (HLG <-> HLG et HLG <-> BAS) :
+set HLG_mtx_req "req"
+# # Lib : liberation de la SC (HLG <-> HLG et HLG <-> BAS) :
+set HLG_mtx_lib "lib"
+# # Acc : accuse de reception (HLG <-> HLG) :
+set HLG_mtx_acc "acc"
+# # Deb : debut de SC (HLG <-> BAS) :
+set HLG_mtx_deb	"deb"
+
+# Valeur intiale de l'exclusion mutuelle :
+set HLG_rc_mtx_state $HLG_mtx_lib 
+# Valeur initiale de l'estampille locale
+set HLG_rc_mtx_hi 0
+
+# Chaque site va occuper deux entrees du tableau, il faut donc un suffixe, concatene a
+# l'id du site, pour discriminer ces deux entrees :
+
+# suffixe d'etat pour chaque site dans le tableau :
+set HLG_mtx_statesuffix "_state"
+# suffixe de date pour chaque site dans le tableau :
+set HLG_mtx_datesuffix "_date" 
+
+
+# Mnemonic for transporting the clock
+set HLG_rc_mnemoclk "hlgclk"
+
+# Mnemonique pour le transport du mutex
+set HLG_rc_mnemomtx "hlgmtx"
+
+
+# Mnemonique pour le transport de la valeur a jour de la SC :
+set HLG_rc_mnemocsint "csint"
+
+# Mnemonique pour l'adressage des messages HLG<->HLG
+set HLG_rc_mnemotarget "hgltgt"
+# Adresse locale = id du site (passe en CLI argument) :
+set HLG_tgt_local $APG_ident
+
+# Mnemonique pour le type de communication HLG<->HLG
+set HLG_rc_mnemointer "inter"
+# Mode broadcast (destine a tous les HLG) :
+set HLG_itr_broadcast "bdct"
+

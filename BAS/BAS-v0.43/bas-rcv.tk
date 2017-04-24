@@ -46,6 +46,27 @@ proc APG_receive_whatwho { what who } {
     set ::BAS_rcv_msg  [APG_msg_splitstr what $::BAS_snd_mnemopayload]
     set ::BAS_rcv_nseq  [APG_msg_splitstr what $::BAS_snd_mnemonseq]
     set ::BAS_rcv_app $who
-    APG_vrb_dispdebug "what = $what, who=$::BAS_rcv_app, payload=$::BAS_rcv_msg" "APG_receive_what"
+    
+    # Quel contenu du message ?
+    set content [APG_msg_splitstr what $::BAS_rc_mnemomtx]
+    # Quel destinataire ? (Cas ou plusieurs BAS sont relies a un HLG)
+    set target [APG_msg_splitstr what $::BAS_rc_mnemotarget]
+    if { $target == $::APG_ident } {
+	switch -- $content \
+	    $::BAS_mtx_deb { 
+		# Autorisation entree SC
+		APG_vrb_dispdebug "$::APG_ident Ok autorisation SC"
+		set remote_int [APG_msg_splitstr what $::BAS_rc_mnemocsint]
+		BAS_cs_deb $remote_int
+	    } \
+	    $::BAS_mtx_upd { 
+		# Propagation de la valeur a jour de la SC :
+		set remote_int [APG_msg_splitstr what $::BAS_rc_mnemocsint]
+		BAS_cs_upd $remote_int
+	    } \
+	    default {
+		APG_vrb_dispdebug "$::APG_ident $content non pris en charge"
+	    }
+    }
 }
 

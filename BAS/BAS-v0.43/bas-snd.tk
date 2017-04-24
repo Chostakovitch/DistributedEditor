@@ -133,8 +133,12 @@ proc BAS_snd_autosend { } {
 
 		# Ajout du numero de sequence
 		APG_msg_addmsg msg $::BAS_snd_mnemonseq $::BAS_snd_nseq
+		
+		# Ajout de l'état du mutex (modif temporaire) 
+		APG_msg_addmsg msg $::BAS_rc_mnemomtx $::BAS_mtx_nul 
 
     APG_send_whatwho $msg $::BAS_snd_app
+    #APG_send_whatwhowhere $msg $::BAS_snd_app "HLG"
 		
 		after $::BAS_snd_delay BAS_snd_autosend
 }

@@ -14,6 +14,9 @@ set BAS_rc_msgdefault "message emis par $::APP (ident=$::APG_ident)"
 #   NB : peut etre modifie par option --dest=
 set BAS_rc_appdefault $APP
 
+# Nom par defaut de l'appli executant l'algo de controle :
+set BAS_rc_netdefault "HLG"
+
 # Delai par defaut entre deux messages.
 # NB : peut etre modifie par option --delay=
 set BAS_rc_delaydefault 2000
@@ -23,3 +26,31 @@ set BAS_rc_mnemopayload "payload"
 
 # Mnemonique pour retrouver le numero de sequence dans les messages
 set BAS_rc_mnemonseq "nseq"
+
+# Mnemonique pour les requetes de section critique
+set BAS_rc_mnemocsrq "crsq"
+
+# Mnemonique de transport de la valeur a jour de la SC :
+set BAS_rc_mnemocsint "csint"
+
+# Valeur initiale de l'entier de section critique
+set BAS_rc_int 10
+
+# Enumeration des differentes valeurs du champ mutex pour tab, et pour les messages HLG <-> HLG et HLG <-> BAS :
+# # Nul : message sans rapport avec le mutex (HLG <-> HLG et HLG <-> BAS) :
+set BAS_mtx_nul "nul"
+# # Upd : mise a jour de la SC (HLG <-> BAS) :
+set BAS_mtx_upd "upd"
+# # Req : demande de SC (HLG <-> HLG et HLG <-> BAS) :
+set BAS_mtx_req "req"
+# # Lib : liberation de la SC (HLG <-> HLG et HLG <-> BAS) :
+set BAS_mtx_lib "lib"
+# # Deb : debut de SC (HLG <-> BAS) :
+set BAS_mtx_deb "deb"
+
+# Mnemonic for transporting the mutex
+set BAS_rc_mnemomtx "hlgmtx"
+
+# Mnemonique pour l'adressage des messages depuis HLG (necessaire si plusieurs BAS par HLG)
+set BAS_rc_mnemotarget "hgltgt"
+

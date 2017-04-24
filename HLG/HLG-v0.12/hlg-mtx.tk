@@ -1,0 +1,231 @@
+#    hlg
+#    an airplug compatible program
+#    author: pmarillo, newapp from NET v0.43
+#    license type: free of charge license for academic and research purpose
+#    see license.txt
+### MODULE MUTEX ####################################################
+
+
+# Valeur de départ de la variable en section critique
+set HLG_int 10 
+
+### PROCEDURES OF THE MODULE ##################################################
+
+# GARDE : initialisation :
+proc HLG_mtx_init { } {
+    # Commence a remplir le tableau contenant l'etat et l'estampille de chacun des sites : 
+    array set ::tab [list $::APG_ident$::HLG_mtx_statesuffix $::HLG_rc_mtx_state $::APG_ident$::HLG_mtx_datesuffix $::HLG_rc_lamh]
+}
+
+# GARDE : Reception d'une demande de section critique de l'appli de base :
+proc HLG_bas_cs_req { } {
+    
+    # Changement d'etat : on passe en requete
+    set ::tab($::APG_ident$::HLG_mtx_statesuffix) $::HLG_mtx_req
+    set ::tab($::APG_ident$::HLG_mtx_datesuffix) [HLG_lam_incrandget]
+
+    # Mise en place d'un header :
+    set req_header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
+    # Message non-destine a BAS :
+    APG_msg_addmsg req_header $::HLG_rc_mnemotarget $::HLG_tgt_local
+    # Broadcast (destine a tous les HLG) :
+    APG_msg_addmsg req_header $::HLG_rc_mnemointer $::HLG_itr_broadcast
+    # Insertion de l'horloge dans le message de requete
+    APG_msg_addmsg req_header $::HLG_rc_mnemoclk $::HLG_lam_h 
+
+    # Creation du message de requete :
+    set req_msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_req]
+    
+    set req [APG_msg_concatemsg $req_header $req_msg] 
+    # Envoi a tous les HLG :
+    HLG_snd_send $req $::APP
+}
+
+# GARDE : Recepetion fin de section critique de l'appli de base :
+proc HLG_bas_cs_lib { } {
+    
+    # Changement d'etat : on passe en liberation du mutex:
+    set ::tab($::APG_ident$::HLG_mtx_statesuffix) $::HLG_mtx_lib
+    set ::tab($::APG_ident$::HLG_mtx_datesuffix) [HLG_lam_incrandget]
+
+    # Creation du header
+    set lib_header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
+    # Message non-destine a BAS :
+    APG_msg_addmsg lib_header $::HLG_rc_mnemotarget $::HLG_tgt_local
+    # Broadcast (destine a tous les HLG) :
+    APG_msg_addmsg lib_header $::HLG_rc_mnemointer $::HLG_itr_broadcast
+    # Insertion de l'horloge dans le message de requete
+    APG_msg_addmsg lib_header $::HLG_rc_mnemoclk $::HLG_lam_h 
+    
+    # Creation du message de liberation
+    set lib_msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_lib]
+    # Ajout de la valeur finale de la variable en section critique :
+    APG_msg_addmsg lib_msg $::HLG_rc_mnemocsint $::HLG_int
+    
+    set lib [APG_msg_concatemsg $lib_header $lib_msg] 
+    # Envoi a tous les HLG :
+    HLG_snd_send $lib $::APP
+}
+
+# GARDE : Reception d'un message de type requete :
+proc HLG_hlg_cs_req { h from } {
+  
+    # MAJ de l'estampille locale
+    HLG_lam_update $h
+    
+    # MAJ de l'etat et de l'horloge du site distant :
+    set ::tab($from$::HLG_mtx_statesuffix) $::HLG_mtx_req
+    set ::tab($from$::HLG_mtx_datesuffix)  $h 
+    
+    # Creation d'un header pour l'accuse de reception :
+    set acc_header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
+    # Le destinataire de l'accuse est l'emetteur de la requete :
+    APG_msg_addmsg acc_header $::HLG_rc_mnemotarget $from
+    # Ajout de l'estampille locale :
+    APG_msg_addmsg acc_header $::HLG_rc_mnemoclk $::HLG_lam_h 
+
+    # Coeur du message (accuse de reception)
+    set acc_msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_acc]
+    
+    set acc [APG_msg_concatemsg $acc_header $acc_msg]
+    # Seul un HLG va traiter le message (cf mnemotarget) :
+    HLG_snd_send $acc $::APP
+
+    # Quel est le site en requete ayant la plus petite estampille ?   
+    set min [HLG_lam_tab_min]  
+    if { $::tab($::APG_ident$::HLG_mtx_statesuffix) == $::HLG_mtx_req
+      && 0 == [string compare $::APG_ident$::HLG_mtx_datesuffix $min] } then {
+	# Conditions reunies pour entrer en section critique :
+	set ::tab($::APG_ident$::HLG_mtx_statesuffix) $::HLG_mtx_deb
+	
+	# Creation du message informant BAS qu'il peut entrer en SC :
+	set deb_header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
+	# Un couple BAS/NET partage le meme APG_ident (cf script run_project.compgraph.sh dans AIRPLUG/bin) :
+	APG_msg_addmsg deb_header $::HLG_rc_mnemotarget $::APG_ident
+
+	set deb_msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_deb]
+	# On transmet la valeur la plus a jour de la section critique :
+        APG_msg_addmsg deb_msg $::HLG_rc_mnemocsint $::HLG_int
+	
+	set deb [APG_msg_concatemsg $deb_header $deb_msg] 
+	# On envoie a BAS :
+	HLG_snd_send $deb $::HLG_rc_basdefault
+     }
+}
+
+# GARDE : Reception d'un message de type liberation :
+proc HLG_hlg_cs_lib { h from int } {
+  
+    # MAJ de l'estampille locale :
+    HLG_lam_update $h
+    
+    # MAJ de l'etat du site informant de la liberation :
+    set ::tab($from$::HLG_mtx_statesuffix) $::HLG_mtx_lib
+    set ::tab($from$::HLG_mtx_datesuffix)  $h 
+    
+    # Quel est le site en requete ayant la plus petite estampille ?   
+    set min [HLG_lam_tab_min]
+    if { $::tab($::APG_ident$::HLG_mtx_statesuffix) == $::HLG_mtx_req
+      && 0 == [string compare $::APG_ident$::HLG_mtx_datesuffix $min] } then {
+	# Conditions reunies pour entrer en section critique :
+	set ::tab($::APG_ident$::HLG_mtx_statesuffix) $::HLG_mtx_deb
+
+	# Creation du message informant BAS qu'il peut entrer en SC :
+        set deb_header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
+	# Un couple BAS/NET partage le meme APG_ident (cf script run_project.compgraph.sh dans AIRPLUG/bin) :
+        APG_msg_addmsg deb_header $::HLG_rc_mnemotarget $::APG_ident
+
+        set deb_msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_deb]
+	# On transmet la valeur la plus a jour de la section critique :
+        APG_msg_addmsg deb_msg $::HLG_rc_mnemocsint $int
+
+        set deb [APG_msg_concatemsg $deb_header $deb_msg] 
+	# On envoie a BAS :
+        HLG_snd_send $deb $::HLG_rc_basdefault
+    } elseif { $::HLG_int != $int } {
+	#On informe BAS seulement si la valeur de la SC a change :
+	set upd_header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
+	APG_msg_addmsg upd_header $::HLG_rc_mnemotarget $::APG_ident
+	
+	set upd_msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_upd]
+	# On transmet la valeur la plus a jour de la section critique :
+	APG_msg_addmsg upd_msg $::HLG_rc_mnemocsint $int
+
+	set upd [APG_msg_concatemsg $upd_header $upd_msg] 
+	# On envoie a BAS :
+	HLG_snd_send $upd $::HLG_rc_basdefault
+    }
+    # On n'oublie pas de stocker la valeur a jour de la SC :
+    set ::HLG_int $int
+}
+
+#GARDE : Reception d'un message de type accuse :
+proc HLG_hlg_cs_acc { h from } {
+  
+    # MAJ de l'estampille locale :
+    HLG_lam_update $h
+
+    # On n'ecrase pas une requete par un etat acc :
+    if { $::tab($from$::HLG_mtx_statesuffix) != $::HLG_mtx_req } {
+	set ::tab($from$::HLG_mtx_statesuffix) $::HLG_mtx_acc
+	set ::tab($from$::HLG_mtx_datesuffix)  $h 
+    }
+    
+    # Quel est le site en requete ayant la plus petite estampille ?   
+    set min [HLG_lam_tab_min]
+    if { $::tab($::APG_ident$::HLG_mtx_statesuffix) == $::HLG_mtx_req
+      && 0 == [string compare $::APG_ident$::HLG_mtx_datesuffix $min] } then {
+	# Conditions reunies pour entrer en section critique :
+	set ::tab($::APG_ident$::HLG_mtx_statesuffix) $::HLG_mtx_deb
+	
+	# Creation du message informant BAS qu'il peut entrer en SC :
+	set deb_header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
+	# Un couple BAS/NET partage le meme APG_ident (cf script run_project.compgraph.sh dans AIRPLUG/bin) :
+	APG_msg_addmsg deb_header $::HLG_rc_mnemotarget $::APG_ident
+
+	set deb_msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_deb]
+	# On transmet la valeur la plus a jour de la section critique :
+        APG_msg_addmsg deb_msg $::HLG_rc_mnemocsint $::HLG_int
+
+	set deb [APG_msg_concatemsg $deb_header $deb_msg]
+	# On envoie a BAS :
+	HLG_snd_send $deb $::HLG_rc_basdefault
+     }
+}
+
+
+###############################################################################
+
+APG_vrb_dispnotif "Intializing mutex"
+HLG_mtx_init
+
+### VARIABLES OF THE MODULE ###################################################
+# Internal value of the local snapshot state
+###############################################################################
+ 
+ 
+### GRAPHICAL AREA OF THE MODULE ##############################################
+
+###############################################################################
+ 
+ 
+### COMMAND LINE OPTION #######################################################
+foreach option $APG_lstargs {
+    set name [lindex [split $option "="] 0]
+    set value [lindex [split $option "="] 1]
+ 
+    switch -- $name {
+	--hlg-sini {
+	    if { $value == "" } {
+		APG_vrb_dispwarning "option $name found without argument ; ignored" "hlg-snp"
+	    } else {
+		set HLG_snp_h $value
+		APG_vrb_dispnotif "option $option found; initial snapshot value=$value" "hlg-snp"
+            }
+	}
+    }
+}
+ 
+###############################################################################
+ 
+

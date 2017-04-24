@@ -1,0 +1,18 @@
+Soutenance : 2 mai
+
+Implementation d'un mutex va etre necessaire
+Implementation d'une sauvegarde (dans BAS et dans NET ?)
+
+Optionnel : horloges vectorielles
+
+mtx+backup => nouveau format de messages
+(type, lamp, flag, (horlgoes_vect)?)
+
+Implementer une lecture globale au lieu de locale (en faisant aussi appel au mtx) afin d'etre certain qu'on est en train de lire la derniere version
+
+Commencer par une variable partagee
+
+TODO :
+Implementer les sections critiques dans BAS
+Implementer les gardes dans rcv et dans snd, avec un autre champ pour l'etat du mutex et la diffusion
+

@@ -1,0 +1,97 @@
+# bas int
+#    an airplug compatible program
+#    author: Bertrand Ducourthial AT utc.fr, newapp from NET v0.31
+#    license type: free of charge license for academic and research purpose
+#    see license.txt
+### MODULE CRITICAL SECTION ####################################################
+
+### VARIABLES OF THE MODULE ###################################################
+
+# La section critique est un entier :
+set BAS_int $BAS_rc_int
+# Buffer pour stocker les changements souhaites avant obtention du mutex :
+set BAS_buffer 0 
+# Valeur par defaut de la mnemonique des messages de requete de section critique :
+set BAS_snd_mnemocsrq $BAS_rc_mnemocsrq 
+
+###############################################################################
+
+
+### GRAPHICAL AREA OF THE MODULE ##############################################
+labelframe .int -pady 2 -padx 2 \
+    -text "Critical section \[$APP, ident = $APG_ident\]"  -fg $APG_int_coltitle
+
+label .int.t -text "Value = "
+label .int.h -textvariable BAS_int -width 4 -anchor w
+
+# Incremente le buffer et demande le mutex :
+button .int.incr -text "+" \
+		-activebackground red \
+		-foreground red \
+		-font $::APG_int_fnbutton \
+		-width 2 \
+		-command BAS_click_incr
+
+# Decremente le buffer et demande le mutex :
+button .int.decr -text "-" \
+		-activebackground red \
+		-foreground red \
+		-font $::APG_int_fnbutton \
+		-width 2 \
+		-command BAS_click_decr
+
+pack .int.t .int.h .int.incr .int.decr -side left
+
+###############################################################################
+
+### COMMAND LINE OPTION #######################################################
+
+###############################################################################
+
+
+### PROCEDURES OF THE MODULE ##################################################
+
+# Incremente le buffer, en attendant d'obtenir la SC :
+proc BAS_click_incr { } {
+   incr ::BAS_buffer
+   BAS_cs_req
+    
+}
+
+# Decremente le buffer, en attendant d'obtenir la SC :
+proc BAS_click_decr { } {
+   set ::BAS_buffer [expr {$::BAS_buffer - 1}]
+   BAS_cs_req
+}
+
+# Requete de SC :
+proc BAS_cs_req { } {
+    set msg [APG_msg_createmsg $::BAS_rc_mnemomtx $::BAS_mtx_req]
+    APG_send_whatwho $msg $::BAS_rc_netdefault 
+    return 0
+}
+
+# Liberation de SC :
+proc BAS_cs_lib { } {
+    set msg [APG_msg_createmsg $::BAS_rc_mnemomtx $::BAS_mtx_lib]
+    APG_msg_addmsg msg $::BAS_rc_mnemocsint $::BAS_int
+    APG_send_whatwho $msg $::BAS_rc_netdefault 
+    
+    return 0
+}
+
+# Debut de SC :
+proc BAS_cs_deb { int } {
+    set ::BAS_int [expr {$::BAS_buffer + $int}]
+    set ::BAS_buffer 0
+    BAS_cs_lib
+}
+
+# MAJ de la SC apres liberation du mutex par un BAS distant :
+proc BAS_cs_upd { int } {
+    set ::BAS_int $int
+    return 0
+}
+
+
+###############################################################################

@@ -10,6 +10,7 @@
 set HLG_rc_mnemoapp "apphlg"
 
 # Valeur initiale de l'horloge de Lamport
+# Par default on fixe la taille de l'horloge vectorielle à 6 instances
 set HLG_rc_lamh 0
 
 # Mnémonique pour le header HLG, contenant la valeur de l'horloge de Lamport

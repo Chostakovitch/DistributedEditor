@@ -15,6 +15,9 @@ set HLG_rcv_msg $APG_msg_unknown
 # application emettrice du dernier message (en cas d'option --whatwho)
 set HLG_rcv_app $APG_msg_unknown
 
+# application destinataire du dernier message (en cas d'option --whatwhowhere)
+set HLG_des_app $APG_msg_unknown
+
 # mnemonique pour le header HLG, contenant le nom de l'application qui a emis
 # le message transporte.
 set HLG_rcv_mnemoapp $HLG_rc_mnemoapp
@@ -31,10 +34,13 @@ label .rcv.t1 -text "Dernier message reçu de "
 label .rcv.app -textvariable HLG_rcv_app -width 4 -fg $APG_int_colmsgrcv
 label .rcv.t2 -text " : "
 label .rcv.msg -textvariable HLG_rcv_msg -width 64  -fg $APG_int_colmsgrcv -anchor w
-pack .rcv.t1 .rcv.app .rcv.t2 .rcv.msg -side left -fill y -pady 2
+#TODO add destination label
+label .rcv.t3 -text "vers "
+label .rcv.des -textvariable HLG_des_app -width 4 -fg $APG_int_colmsgrcv
+pack .rcv.t1 .rcv.app .rcv.t2 .rcv.msg .rcv.t3 .rcv.des -side left -fill y -pady 2
 
 # affichage des sous-zones de la zone rcv
-pack .rcv.msg .rcv.app -side left -fill y -pady 2
+pack .rcv.msg .rcv.app .rcv.des -side left -fill y -pady 2
 ###############################################################################
 
 
@@ -68,6 +74,8 @@ foreach option $APG_lstargs {
 # Retour : rien                                                               #
 #-----------------------------------------------------------------------------#
 proc APG_receive_whatwho { what who } {
+    
+    #puts "Received message"
 
 		# Mise a jour de l'interface du module rcv.
     set ::HLG_rcv_msg $what
@@ -77,52 +85,62 @@ proc APG_receive_whatwho { what who } {
     switch -- $::HLG_rcv_app \
 				$::APP {
 						# Reception d'un message d'une application HLG distante,
-						# => transfert vers l'application BAS locale.
 						
-						# Recuperation de la valeur du champs application emettrice dans le
-						# message recu.
-						set app [APG_msg_splitstr what $::HLG_rcv_mnemoapp]
+						# Quel type de message ?
+						set content [APG_msg_splitstr what $::HLG_rc_mnemomtx]
+						# Quel destinataire ? 
+						set target [APG_msg_splitstr what $::HLG_rc_mnemotarget]
+						# Message broadcast ?
+						set inter [APG_msg_splitstr what $::HLG_rc_mnemointer]
+						# Valeur de l'horloge contenue dans le message :
 						set h_rcv [APG_msg_splitstr what $::HLG_rcv_mnemoclk]
-						HLG_lam_update $h_rcv
-						APG_vrb_dispdebug "received clock: $h_rcv" "APG_receive_whatwho"
 
-						# Recuperation eventuelle d'autres champs.
-
-						# Ajout eventuel de traitements ici.
-
-						# Recuperation du message qui a ete concatene au header
-						# a l'emission. HLG_rcv_mnemoapp doit etre le dernier mnemonique
-						# avant le message concatene. Adapter si des champs ont ete ajoutes.
-						set msg [APG_msg_endstr what $::HLG_rcv_mnemoclk true]
-
-						# Transfert du message a l'application locale $app
-						HLG_snd_send $msg $app
+						# Si le message est destine a ce site :
+						if { $target == $::HLG_tgt_local 
+						  || $inter == $::HLG_itr_broadcast
+						} then {   
+						    switch -- $content \
+							$::HLG_mtx_req {
+							    # Traiter la requete distante :
+							    HLG_hlg_cs_req $h_rcv $target 
+							} \
+							$::HLG_mtx_lib {
+							    # Tenir compte de la liberation distante :
+							    # # MAJ valeur SC
+							    set int [APG_msg_splitstr what $::HLG_rc_mnemocsint]
+							    HLG_hlg_cs_lib $h_rcv $target $int
+							} \
+							$::HLG_mtx_acc {
+							    # Traiter l'accuse de reception :
+							    HLG_hlg_cs_acc $h_rcv $target 
+							} \
+							default {
+							    APG_vrb_dispwarning "Commande non reconnue"
+							} 
+						}
 				} \
 				default {
 						# Reception d'un message d'une application autre que HLG.
-						# On suppose donc qu'il s'agit d'une application locale dont les
-						# communications sont interceptees par HLG pour realiser un controle
-						# sur son execution.
-						# => transfert vers les applications HLG distantes.
-						
-						# Ajout eventuel de traitements ici.
 
-
-						# Creation d'un header contenant l'application emettrice.
-						# Utilisation d'un mnemonique pour retrouver ce champs
-						# facilement a la reception.
-						set header [APG_msg_createmsg $::HLG_rcv_mnemoapp $who]
-						APG_msg_addmsg header $::HLG_rcv_mnemoclk [HLG_lam_incrandget]
-
-						# Ajout eventuel d'autres champs dans le header ici.
-
-						# Formation du message en concatenant le header et le message recu.
-						set msg [APG_msg_concatemsg $header $what]
-
-						# Appel de la procedure d'emission pour emettre le message msg
-						# vers d'autres applications HLG (cette procedure permet de mettre
-						# a jour l'interface du module snd). NB : $::APP = "HLG".
-						HLG_snd_send $msg $::APP
+						# Quel contenu ?
+						set content [APG_msg_splitstr what $::HLG_rc_mnemomtx]
+						switch -- $content \
+						    $::HLG_mtx_req {
+							# BAS demande la SC :
+							HLG_bas_cs_req
+						    } \
+						    $::HLG_mtx_lib {
+							# BAS libere la SC :
+							set ::HLG_int [APG_msg_splitstr what $::HLG_rc_mnemocsint]	
+							HLG_bas_cs_lib
+						    } \
+						    $::HLG_mtx_nul {
+							# Message sans rapport avec la SC
+						    } \
+						    default {
+							APG_vrb_dispwarning "Commande non reconnue"
+						    } 
 				}
 }
+
 

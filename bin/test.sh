@@ -15,8 +15,8 @@ mkfifo /tmp/in3b /tmp/out3b
 ./hlg.tk --auto --ident=node3 --whatwho --begin=BAS < /tmp/in3b > /tmp/out3b &
 
 cat /tmp/out1a > /tmp/in1b &
-cat /tmp/out1b | tee /tmp/in1a > /tmp/in2b &
+cat /tmp/out1b | tee /tmp/in1a /tmp/in2b /tmp/in3b &
 cat /tmp/out2a > /tmp/in2b &
-cat /tmp/out2b | tee /tmp/in2a > /tmp/in3b &
+cat /tmp/out2b | tee /tmp/in2a /tmp/in3b /tmp/in1b &
 cat /tmp/out3a > /tmp/in3b &
-cat /tmp/out3b | tee /tmp/in3a > /tmp/in1b &
+cat /tmp/out3b | tee /tmp/in3a /tmp/in1b /tmp/in2b &

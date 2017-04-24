@@ -97,7 +97,7 @@ proc APG_svg_formatlastdata { } {
 proc APG_svg_formatfirstdata { } {
     return "Date $::APG_svg_delim $::HLG_lam_h"
 }
-#-- Procedure BAS_snp_btsnp --------------------------------------------------#
+#-- Procedure HLG_take_snap --------------------------------------------------#
 # Action : gere la realisation du snapshot                                    #
 # Entree : rien                                                               #
 # Retour : rien                                                               #
@@ -105,6 +105,20 @@ proc APG_svg_formatfirstdata { } {
 proc HLG_take_snap { } {
 	APG_svg_start
 	APG_svg_stop
+}
+
+#-- Procedure HLG_altern_color -----------------------------------------------#
+# Action : Gestion des couleurs pour le declenchement du snap                 #
+#	   Si site BLANC -> deviens ROUGE et inversement                      #
+# Entree : rien                                                               #
+# Retour : rien                                                               #
+#-----------------------------------------------------------------------------#
+proc HLG_altern_color { } {
+	if {$::HLG_rcv_color_snap == "ROUGE"} {
+		set ::HLG_rcv_color_snap "BLANC"
+	} else {
+		set ::HLG_rcv_color_snap "ROUGE"
+	}
 }
 #-- Procedure APG_receive_whatwho --------------------------------------------#
 # Action : gere la reception de messages                                      #
@@ -134,14 +148,12 @@ proc APG_receive_whatwho { what who } {
 
 						set snap_rcv [APG_msg_splitstr what $::HLG_rcv_mnemosnp]
  						
-						# Si la couleur du message est rouge et que la couleur du site
-						# est blanc, alors le site prend un snapshot
-						if {$snap_rcv == "ROUGE" && $::HLG_rcv_color_snap == "BLANC" } {
-						    set ::HLG_rcv_color_snap "ROUGE"
+						# Si la couleur du message est differente de celle du site
+						# alors le site prend un snapshot
+						# La couleur sert juste à définir si le snapshot a deja ete pris ou non
+						if {$snap_rcv != $::HLG_rcv_color_snap} {
+						    HLG_altern_color
 						    HLG_take_snap
-						    # Transmission de la demande aux HLG voisins 
-						    HLG_snd_send $what $::APP
-
 						} 
 						# Mise à jour de l'horloge locale
 						HLG_lam_update $h_rcv
@@ -176,18 +188,20 @@ proc APG_receive_whatwho { what who } {
 						set header [APG_msg_createmsg $::HLG_rcv_mnemoapp $who]
 						
 						# On regarde si le payload correspond à une demande de snapshot
+						# emanant de l'app de base
 						set is_asking_snap [APG_msg_splitstr what $::HLG_rcv_mnemopayload]
 						if {$is_asking_snap == "SNAP"} {
 						    APG_vrb_dispdebug "*-SNAPSHOT-*"
-						    # Couleur associée à la demande de snapshot
-						    APG_msg_addmsg header $::HLG_rcv_mnemosnp "ROUGE"
+						    # On modifie la couleur du site
+						    HLG_altern_color
+						    HLG_take_snap
 						} 
 							
 						#Ajout du champ de l'horloge de Lamport dans le header
 						APG_msg_addmsg header $::HLG_rcv_mnenoclk [HLG_lam_incrandget]
 
-						# Ajout eventuel d'autres champs dans le header ici.
-
+						# Ajout du champ du snapshot
+						 APG_msg_addmsg header $::HLG_rcv_mnemosnp $::HLG_rcv_color_snap
 						# Formation du message en concatenant le header et le message recu.
 						set msg [APG_msg_concatemsg $header $what]
 

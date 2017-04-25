@@ -24,7 +24,7 @@ if { [ catch {
 		set APG_LANG $env(APG_LANG)
     set libapgfile [open $APG_PATH/LIBAPGTK/LIBAPGTK/libapg.tk r]
     close $libapgfile
-    
+
 } ] } {
     if { [info exists APG_PATH] == 0 } {
 				set APG_PATH "??"
@@ -44,7 +44,7 @@ if { [ catch {
                          In the bin directory, type source config.sh\n \
                          See the on-line documentation. Contact the Airplug team.\
                          \033\[0;00m\n"
-		}				
+		}
     exit
 } else {
     source $APG_PATH/LIBAPGTK/LIBAPGTK/libapg.tk
@@ -57,7 +57,7 @@ if { [ catch {
 ###############################################################################
 
 
-	      
+
 ### SURCHARGE DE VARIABLES ####################################################
 set APP_msgapropos \
 "BAS v0.39
@@ -91,7 +91,7 @@ source $PATH/bas-int.tk
 ## Ajout des zones crees, avec option d'affichage
 APG_int_addzone snd "Emissions" 1
 APG_int_addzone rcv "Receptions" 1
-APG_int_addzone int "Section critique" 1
+APG_int_addzone shared "Variable" 1
 
 ## Affichage des zones
 APG_int_displayzones

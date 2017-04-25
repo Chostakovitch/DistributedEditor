@@ -7,40 +7,45 @@
 
 ### VARIABLES OF THE MODULE ###################################################
 
-# La section critique est un entier :
-set BAS_int $BAS_rc_int
+# Variable textuelle partagée entre les applications
+set BAS_shared_var $BAS_rc_sharedvalue
+
+# Booléean indiquant si l'application exécute sa section critique
+set BAS_shared_insc false
+
+# Texte du bouton pour entrer en section critique
+set BAS_shared_entersc $BAS_rc_entersc
+
+# Texte du bouton pour sortir de section critique
+set BAS_shared_leavesc $BAS_rc_leavesc
+
 # Buffer pour stocker les changements souhaites avant obtention du mutex :
-set BAS_buffer 0 
+set BAS_buffer 0
+
 # Valeur par defaut de la mnemonique des messages de requete de section critique :
-set BAS_snd_mnemocsrq $BAS_rc_mnemocsrq 
+set BAS_snd_mnemocsrq $BAS_rc_mnemocsrq
 
 ###############################################################################
 
 
 ### GRAPHICAL AREA OF THE MODULE ##############################################
-labelframe .int -pady 2 -padx 2 \
-    -text "Critical section \[$APP, ident = $APG_ident\]"  -fg $APG_int_coltitle
+labelframe .shared -pady 2 -padx 2 -text "Variable partagée \[$APP, ident = $APG_ident\]" -fg $APG_int_coltitle
 
-label .int.t -text "Value = "
-label .int.h -textvariable BAS_int -width 4 -anchor w
+# Bouton "toogle" d'entrée en section critique
+button .shared.btsc \
+		-textvariable BAS_shared_entersc \
+		-activebackground $APG_int_colbutton \
+		-foreground $APG_int_colbutton \
+		-font $APG_int_fnbutton \
+		-width 10 \
+		-command BAS_shared_btsc
 
-# Incremente le buffer et demande le mutex :
-button .int.incr -text "+" \
-		-activebackground red \
-		-foreground red \
-		-font $::APG_int_fnbutton \
-		-width 2 \
-		-command BAS_click_incr
+# Zone de texte initialement désactivée contenant la variable partagée
+labelframe .shared.var -text "Variable partagée"
+entry .shared.var.v -width 86 -textvariable BAS_shared_var -state disable
 
-# Decremente le buffer et demande le mutex :
-button .int.decr -text "-" \
-		-activebackground red \
-		-foreground red \
-		-font $::APG_int_fnbutton \
-		-width 2 \
-		-command BAS_click_decr
-
-pack .int.t .int.h .int.incr .int.decr -side left
+# affichage des sous-zones de la zone snd
+pack .shared.btsc .shared.var .shared.var.v -side left -fill y -pady 2
 
 ###############################################################################
 
@@ -51,11 +56,33 @@ pack .int.t .int.h .int.incr .int.decr -side left
 
 ### PROCEDURES OF THE MODULE ##################################################
 
+proc BAS_shared_btsc { } {
+		if { $::BAS_shared_insc == false } {
+				# Demande d'entrée en section critique
+				.shared.btsc configure -textvariable ::BAS_shared_leavesc -state disable
+
+				# TODO
+				BAS_cs_req
+
+				# Entrée effective en section critique
+				.shared.var.v configure -state normal
+				.shared.btsc configure -textvariable ::BAS_shared_leavesc -state normal
+				set ::BAS_shared_insc true
+		} else {
+				# Sortie de section critique
+
+				# TODO
+				BAS_cs_lib
+				set ::BAS_shared_insc false
+				.shared.var.v configure -state disable
+				.shared.btsc configure -textvariable ::BAS_shared_entersc
+		}
+}
 # Incremente le buffer, en attendant d'obtenir la SC :
 proc BAS_click_incr { } {
    incr ::BAS_buffer
    BAS_cs_req
-    
+
 }
 
 # Decremente le buffer, en attendant d'obtenir la SC :
@@ -67,7 +94,7 @@ proc BAS_click_decr { } {
 # Requete de SC :
 proc BAS_cs_req { } {
     set msg [APG_msg_createmsg $::BAS_rc_mnemomtx $::BAS_mtx_req]
-    APG_send_whatwho $msg $::BAS_rc_netdefault 
+    APG_send_whatwho $msg $::BAS_rc_netdefault
     return 0
 }
 
@@ -75,8 +102,8 @@ proc BAS_cs_req { } {
 proc BAS_cs_lib { } {
     set msg [APG_msg_createmsg $::BAS_rc_mnemomtx $::BAS_mtx_lib]
     APG_msg_addmsg msg $::BAS_rc_mnemocsint $::BAS_int
-    APG_send_whatwho $msg $::BAS_rc_netdefault 
-    
+    APG_send_whatwho $msg $::BAS_rc_netdefault
+
     return 0
 }
 
@@ -84,7 +111,6 @@ proc BAS_cs_lib { } {
 proc BAS_cs_deb { int } {
     set ::BAS_int [expr {$::BAS_buffer + $int}]
     set ::BAS_buffer 0
-    BAS_cs_lib
 }
 
 # MAJ de la SC apres liberation du mutex par un BAS distant :

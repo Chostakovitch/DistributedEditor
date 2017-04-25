@@ -54,3 +54,12 @@ set BAS_rc_mnemomtx "hlgmtx"
 # Mnemonique pour l'adressage des messages depuis HLG (necessaire si plusieurs BAS par HLG)
 set BAS_rc_mnemotarget "hgltgt"
 
+# Texte du bouton pour entrer en section critique
+set BAS_rc_entersc "Entrer en SC"
+
+# Texte du bouton pour sortir de section critique
+set BAS_rc_leavesc "Sortir de SC"
+
+# Texte par défaut de la variable partagée
+set BAS_rc_sharedvalue "Texte à accès exclusif"
+

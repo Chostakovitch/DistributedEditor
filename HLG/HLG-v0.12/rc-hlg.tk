@@ -9,6 +9,11 @@
 # le message transporte.
 set HLG_rc_mnemoapp "apphlg"
 
+set HLG_rc_mnemopayload "payload"
+
+set HLG_rc_mnemonseq "nseq"
+
+
 # Nom par defaut de l'appli distante :
 set HLG_rc_basdefault "BAS"
 

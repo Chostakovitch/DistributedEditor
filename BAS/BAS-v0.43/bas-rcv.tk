@@ -76,6 +76,9 @@ proc APG_receive_whatwho { what who } {
 			set remote_string [APG_msg_splitstr what $::BAS_rc_mnemoscstring]
 			BAS_shared_upd $remote_string
 	    } \
+	    $::BAS_mtx_nul {
+	    	# Déjà pris en charge au début de la fonction
+	    } \
 	    default {
 			APG_vrb_dispwarning "$::APG_ident $content non pris en charge"
 	    }

@@ -82,7 +82,7 @@ proc APG_receive_whatwho { what who } {
     switch -- $::HLG_rcv_app \
 	$::APP {
 		# Reception d'un message d'une application HLG distante
-		
+
 		# Extraction du contenu
 		set content [APG_msg_splitstr what $::HLG_rc_mnemomtx]
 		# Extraction du destinataire
@@ -91,7 +91,6 @@ proc APG_receive_whatwho { what who } {
 		set inter [APG_msg_splitstr what $::HLG_rc_mnemointer]
 		# Valeur de l'horloge contenue dans le message
 		set h_rcv [APG_msg_splitstr what $::HLG_rcv_mnemoclk]
-
 		# Si le message est destine a ce site (broadcast ou ciblage)
 		if { $target == $::HLG_tgt_local || $inter == $::HLG_itr_broadcast } then {   
 		    switch -- $content \
@@ -107,6 +106,21 @@ proc APG_receive_whatwho { what who } {
 			$::HLG_mtx_acc {
 			    # Cas d'un accusé de réception, on le traite
 			    HLG_hlg_cs_acc $h_rcv $target 
+			} \
+			$::HLG_mtx_nul {
+				HLG_lam_update $h_rcv
+
+				# Cas d'un message standard à transmettre à BAS
+				set header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
+				APG_msg_addmsg header $::HLG_rc_mnemotarget $::APG_ident
+				set msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_nul]
+				set payload [APG_msg_splitstr what $::HLG_rc_mnemopayload]
+				set nseq [APG_msg_splitstr what $::HLG_rc_mnemonseq]
+				APG_msg_addmsg msg $::HLG_rc_mnemopayload $payload
+				APG_msg_addmsg msg $::HLG_rc_mnemonseq $nseq
+				set to_send [APG_msg_concatemsg $header $msg]
+
+				HLG_snd_send $to_send $::HLG_rc_basdefault
 			} \
 			default {
 			    APG_vrb_dispwarning "$::APG_ident Message malformé : $content" "APG_receive_whatwho"
@@ -130,7 +144,10 @@ proc APG_receive_whatwho { what who } {
 		    } \
 		    $::HLG_mtx_nul {
 				# Message sans rapport avec les mutex, à diffuser normalement
-				# TODO
+				set header [APG_msg_createmsg $::HLG_rcv_mnemoapp $who]
+				APG_msg_addmsg header $::HLG_rcv_mnemoclk [HLG_lam_incrandget]
+				set msg [APG_msg_concatemsg $header $what]
+				HLG_snd_send $msg $::APP
 		    } \
 		    default {
 				APG_vrb_dispwarning "$::APG_ident Message malformé : $content" "APG_receive_whatwho"

@@ -131,7 +131,7 @@ proc BAS_snd_autosend { } {
     set msg [APG_msg_createmsg $::BAS_snd_mnemopayload $::BAS_snd_msg]
 
 	# Ajout du numero de sequence
-	APG_msg_addmsg msg $::BAS_snd_mnemonseq $::BAS_snd_nseq
+	APG_msg_addmsg msg $::BAS_snd_mnemonseq	 $::BAS_snd_nseq
 	
 	# mtx_nul pour indiquer un message sans rapport avec les mutex (standard)
 	APG_msg_addmsg msg $::BAS_rc_mnemomtx $::BAS_mtx_nul 
@@ -142,4 +142,3 @@ proc BAS_snd_autosend { } {
 
 	after $::BAS_snd_delay BAS_snd_autosend
 }
-

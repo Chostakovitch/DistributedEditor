@@ -45,19 +45,6 @@ proc HLG_snd_send { what who } {
 		APG_send_whatwho $what $who
 }
 
-# Finalement non utilisee dans l'appli mutex :
-proc HLG_snd_send_where { what who where } {
-
-		# Mise a jour de l'interface du module snd.
-		set ::HLG_snd_msg $what
-		set ::HLG_snd_app $who
-		set ::HLG_snd_des $where
-
-		# Emission proprement dite.
-		#APG_send_whatwho $what $who $where
-		APG_send_whatwhowhere $what $who $where
-}
-
 ###############################################################################
 
 

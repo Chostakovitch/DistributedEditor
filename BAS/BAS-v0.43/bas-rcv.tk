@@ -47,25 +47,30 @@ proc APG_receive_whatwho { what who } {
     set ::BAS_rcv_nseq  [APG_msg_splitstr what $::BAS_snd_mnemonseq]
     set ::BAS_rcv_app $who
     
-    # Quel contenu du message ?
+    # Extraction du contenu
     set content [APG_msg_splitstr what $::BAS_rc_mnemomtx]
-    # Quel destinataire ? (Cas ou plusieurs BAS sont relies a un HLG)
+
+    # Extraction du destinataire
     set target [APG_msg_splitstr what $::BAS_rc_mnemotarget]
+
     if { $target == $::APG_ident } {
 	switch -- $content \
 	    $::BAS_mtx_deb { 
-		# Autorisation entree SC
-		APG_vrb_dispdebug "$::APG_ident Ok autorisation SC"
-		set remote_int [APG_msg_splitstr what $::BAS_rc_mnemocsint]
-		BAS_cs_deb $remote_int
+			# Autorisation d'entrée en SC
+			APG_vrb_dispdebug "$::APG_ident Autorisation d'entrée en SC" "APG_receive_whatwho"
+
+			# Modification de l'interface pour manipuler la chaîne
+			BAS_shared_effectivesc
 	    } \
 	    $::BAS_mtx_upd { 
-		# Propagation de la valeur a jour de la SC :
-		set remote_int [APG_msg_splitstr what $::BAS_rc_mnemocsint]
-		BAS_cs_upd $remote_int
+			# Fin de SC d'une autre application, mise à jour de la chaîne
+			APG_vrb_dispdebug "$::APG_ident Mise à jour distante de la chaîne" "APG_receive_whatwho"
+
+			set remote_string [APG_msg_splitstr what $::BAS_rc_mnemoscstring]
+			BAS_shared_upd $remote_string
 	    } \
 	    default {
-		APG_vrb_dispdebug "$::APG_ident $content non pris en charge"
+			APG_vrb_dispdebug "$::APG_ident $content non pris en charge"
 	    }
     }
 }

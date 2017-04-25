@@ -52,9 +52,8 @@ set HLG_rc_mnemoclk "hlgclk"
 # Mnemonique pour le transport du mutex
 set HLG_rc_mnemomtx "hlgmtx"
 
-
 # Mnemonique pour le transport de la valeur a jour de la SC :
-set HLG_rc_mnemocsint "csint"
+set HLG_rc_mnemoscstring "scstring"
 
 # Mnemonique pour l'adressage des messages HLG<->HLG
 set HLG_rc_mnemotarget "hgltgt"

@@ -31,7 +31,7 @@ set BAS_rc_mnemonseq "nseq"
 set BAS_rc_mnemocsrq "crsq"
 
 # Mnemonique de transport de la valeur a jour de la SC :
-set BAS_rc_mnemocsint "csint"
+set BAS_rc_mnemoscstring "scstring"
 
 # Valeur initiale de l'entier de section critique
 set BAS_rc_int 10

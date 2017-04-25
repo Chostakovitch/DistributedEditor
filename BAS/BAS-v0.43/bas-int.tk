@@ -19,9 +19,6 @@ set BAS_shared_entersc $BAS_rc_entersc
 # Texte du bouton pour sortir de section critique
 set BAS_shared_leavesc $BAS_rc_leavesc
 
-# Buffer pour stocker les changements souhaites avant obtention du mutex :
-set BAS_buffer 0
-
 # Valeur par defaut de la mnemonique des messages de requete de section critique :
 set BAS_snd_mnemocsrq $BAS_rc_mnemocsrq
 
@@ -44,7 +41,7 @@ button .shared.btsc \
 labelframe .shared.var -text "Variable partagée"
 entry .shared.var.v -width 86 -textvariable BAS_shared_var -state disable
 
-# affichage des sous-zones de la zone snd
+# Affichage de la zone section critique
 pack .shared.btsc .shared.var .shared.var.v -side left -fill y -pady 2
 
 ###############################################################################
@@ -56,68 +53,57 @@ pack .shared.btsc .shared.var .shared.var.v -side left -fill y -pady 2
 
 ### PROCEDURES OF THE MODULE ##################################################
 
+# Clic sur le bouton d'entrée/sortie de SC
 proc BAS_shared_btsc { } {
 		if { $::BAS_shared_insc == false } {
 				# Demande d'entrée en section critique
 				.shared.btsc configure -textvariable ::BAS_shared_leavesc -state disable
 
-				# TODO
-				BAS_cs_req
-
-				# Entrée effective en section critique
-				.shared.var.v configure -state normal
-				.shared.btsc configure -textvariable ::BAS_shared_leavesc -state normal
-				set ::BAS_shared_insc true
+				# La demande est envoyée et l'interface est bloquée jusqu'à réception
+				BAS_shared_req
 		} else {
 				# Sortie de section critique
 
 				# TODO
-				BAS_cs_lib
+				BAS_shared_free
 				set ::BAS_shared_insc false
 				.shared.var.v configure -state disable
 				.shared.btsc configure -textvariable ::BAS_shared_entersc
 		}
 }
-# Incremente le buffer, en attendant d'obtenir la SC :
-proc BAS_click_incr { } {
-   incr ::BAS_buffer
-   BAS_cs_req
 
+# Début de SC après autorisation
+proc BAS_shared_effectivesc { } {
+	# Entrée effective en section critique
+	.shared.var.v configure -state normal
+	.shared.btsc configure -textvariable ::BAS_shared_leavesc -state normal
+	set ::BAS_shared_insc true
+
+	APG_vrb_dispdebug "$::APG_ident Entrée effective en SC" "BAS_shared_effectivesc"
 }
 
-# Decremente le buffer, en attendant d'obtenir la SC :
-proc BAS_click_decr { } {
-   set ::BAS_buffer [expr {$::BAS_buffer - 1}]
-   BAS_cs_req
-}
-
-# Requete de SC :
-proc BAS_cs_req { } {
+# Requete de SC
+proc BAS_shared_req { } {
     set msg [APG_msg_createmsg $::BAS_rc_mnemomtx $::BAS_mtx_req]
     APG_send_whatwho $msg $::BAS_rc_netdefault
-    return 0
+
+    APG_vrb_dispdebug "$::APG_ident Demande d'entrée en SC" "BAS_shared_req"
 }
 
-# Liberation de SC :
-proc BAS_cs_lib { } {
+# Liberation de SC
+proc BAS_shared_free { } {
     set msg [APG_msg_createmsg $::BAS_rc_mnemomtx $::BAS_mtx_lib]
-    APG_msg_addmsg msg $::BAS_rc_mnemocsint $::BAS_int
+    APG_msg_addmsg msg $::BAS_rc_mnemoscstring $::BAS_shared_var
     APG_send_whatwho $msg $::BAS_rc_netdefault
 
-    return 0
-}
-
-# Debut de SC :
-proc BAS_cs_deb { int } {
-    set ::BAS_int [expr {$::BAS_buffer + $int}]
-    set ::BAS_buffer 0
+    APG_vrb_dispdebug "$::APG_ident Fin de SC" "BAS_shared_free"
 }
 
 # MAJ de la SC apres liberation du mutex par un BAS distant :
-proc BAS_cs_upd { int } {
-    set ::BAS_int $int
-    return 0
-}
+proc BAS_shared_upd { string } {
+    set ::BAS_shared_var $string
 
+    APG_vrb_dispdebug "$::APG_ident Mise à jour distante" "BAS_shared_upd"
+}
 
 ###############################################################################

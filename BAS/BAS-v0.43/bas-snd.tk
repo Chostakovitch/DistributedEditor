@@ -124,22 +124,22 @@ proc BAS_snd_btauto { } {
 # Retour : rien                                                               #
 #-----------------------------------------------------------------------------#
 proc BAS_snd_autosend { } {
-    
-		# Incrementation du numero de message
-		incr ::BAS_snd_nseq
+	# Incrementation du numero de message
+	incr ::BAS_snd_nseq
 
     # Creation du message formate
     set msg [APG_msg_createmsg $::BAS_snd_mnemopayload $::BAS_snd_msg]
 
-		# Ajout du numero de sequence
-		APG_msg_addmsg msg $::BAS_snd_mnemonseq $::BAS_snd_nseq
-		
-		# Ajout de l'état du mutex (modif temporaire) 
-		APG_msg_addmsg msg $::BAS_rc_mnemomtx $::BAS_mtx_nul 
+	# Ajout du numero de sequence
+	APG_msg_addmsg msg $::BAS_snd_mnemonseq $::BAS_snd_nseq
+	
+	# mtx_nul pour indiquer un message sans rapport avec les mutex (standard)
+	APG_msg_addmsg msg $::BAS_rc_mnemomtx $::BAS_mtx_nul 
 
     APG_send_whatwho $msg $::BAS_snd_app
-    #APG_send_whatwhowhere $msg $::BAS_snd_app "HLG"
-		
-		after $::BAS_snd_delay BAS_snd_autosend
+
+    APG_vrb_dispnotif "$::APG_ident Envoi de $msg à $::BAS_snd_app" "BAS_sng_autosend"
+
+	after $::BAS_snd_delay BAS_snd_autosend
 }
 

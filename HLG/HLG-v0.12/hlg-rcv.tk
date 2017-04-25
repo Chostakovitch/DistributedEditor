@@ -24,7 +24,6 @@ set HLG_rcv_mnemoapp $HLG_rc_mnemoapp
 
 ###############################################################################
 
-
 ### ZONE DU MODULE ############################################################
 ## zone du module reception
 labelframe .rcv -pady 2 -padx 2 \
@@ -50,17 +49,17 @@ foreach option $APG_lstargs {
     set value [lindex [split $option "="] 1]
     
     switch -- $name {
-				--source {
-						#--------------------------------------------------------------------------------
-						# applications emettrices auxquelles il faut s'abonner
-						#--------------------------------------------------------------------------------
-						if { $value == "" } {
-								APG_vrb_dispwarning "option $name trouvee sans argument ; ignoree"
-						} else {
-								APG_vrb_dispnotif "option $option trouvee, abonnement a l'app source $value"
-								APG_begin_lch $value
-						}
-				}
+		--source {
+			#--------------------------------------------------------------------------------
+			# applications emettrices auxquelles il faut s'abonner
+			#--------------------------------------------------------------------------------
+			if { $value == "" } {
+					APG_vrb_dispwarning "option $name trouvee sans argument ; ignoree"
+			} else {
+					APG_vrb_dispnotif "option $option trouvee, abonnement a l'app source $value"
+					APG_begin_lch $value
+			}
+		}
     }
 }
 ###############################################################################
@@ -74,73 +73,69 @@ foreach option $APG_lstargs {
 # Retour : rien                                                               #
 #-----------------------------------------------------------------------------#
 proc APG_receive_whatwho { what who } {
-    
-    #puts "Received message"
 
-		# Mise a jour de l'interface du module rcv.
+	# Mise a jour de l'interface du module rcv.
     set ::HLG_rcv_msg $what
     set ::HLG_rcv_app $who
 
-		# Traitement different selon l'emetteur.
+	# Traitement different selon l'emetteur.
     switch -- $::HLG_rcv_app \
-				$::APP {
-						# Reception d'un message d'une application HLG distante,
-						
-						# Quel type de message ?
-						set content [APG_msg_splitstr what $::HLG_rc_mnemomtx]
-						# Quel destinataire ? 
-						set target [APG_msg_splitstr what $::HLG_rc_mnemotarget]
-						# Message broadcast ?
-						set inter [APG_msg_splitstr what $::HLG_rc_mnemointer]
-						# Valeur de l'horloge contenue dans le message :
-						set h_rcv [APG_msg_splitstr what $::HLG_rcv_mnemoclk]
+	$::APP {
+		# Reception d'un message d'une application HLG distante
+		
+		# Extraction du contenu
+		set content [APG_msg_splitstr what $::HLG_rc_mnemomtx]
+		# Extraction du destinataire
+		set target [APG_msg_splitstr what $::HLG_rc_mnemotarget]
+		# Message broadcast ?
+		set inter [APG_msg_splitstr what $::HLG_rc_mnemointer]
+		# Valeur de l'horloge contenue dans le message
+		set h_rcv [APG_msg_splitstr what $::HLG_rcv_mnemoclk]
 
-						# Si le message est destine a ce site :
-						if { $target == $::HLG_tgt_local 
-						  || $inter == $::HLG_itr_broadcast
-						} then {   
-						    switch -- $content \
-							$::HLG_mtx_req {
-							    # Traiter la requete distante :
-							    HLG_hlg_cs_req $h_rcv $target 
-							} \
-							$::HLG_mtx_lib {
-							    # Tenir compte de la liberation distante :
-							    # # MAJ valeur SC
-							    set int [APG_msg_splitstr what $::HLG_rc_mnemocsint]
-							    HLG_hlg_cs_lib $h_rcv $target $int
-							} \
-							$::HLG_mtx_acc {
-							    # Traiter l'accuse de reception :
-							    HLG_hlg_cs_acc $h_rcv $target 
-							} \
-							default {
-							    APG_vrb_dispwarning "Commande non reconnue"
-							} 
-						}
-				} \
-				default {
-						# Reception d'un message d'une application autre que HLG.
+		# Si le message est destine a ce site (broadcast ou ciblage)
+		if { $target == $::HLG_tgt_local || $inter == $::HLG_itr_broadcast } then {   
+		    switch -- $content \
+			$::HLG_mtx_req {
+				# Cas d'une demande d'entrée en SC d'un site distante
+			    HLG_hlg_cs_req $h_rcv $target 
+			} \
+			$::HLG_mtx_lib {
+			    # Cas d'une libération de la variable partagée distante, mise à jour
+			    set string [APG_msg_splitstr what $::HLG_rc_mnemoscstring]
+			    HLG_hlg_cs_lib $h_rcv $target $string
+			} \
+			$::HLG_mtx_acc {
+			    # Cas d'un accusé de réception, on le traite
+			    HLG_hlg_cs_acc $h_rcv $target 
+			} \
+			default {
+			    APG_vrb_dispwarning "$::APG_ident Message malformé : $content" "APG_receive_whatwho"
+			} 
+		}
+	} \
+	default {
+		# Reception d'un message d'une application autre que HLG (en général BAS)
 
-						# Quel contenu ?
-						set content [APG_msg_splitstr what $::HLG_rc_mnemomtx]
-						switch -- $content \
-						    $::HLG_mtx_req {
-							# BAS demande la SC :
-							HLG_bas_cs_req
-						    } \
-						    $::HLG_mtx_lib {
-							# BAS libere la SC :
-							set ::HLG_int [APG_msg_splitstr what $::HLG_rc_mnemocsint]	
-							HLG_bas_cs_lib
-						    } \
-						    $::HLG_mtx_nul {
-							# Message sans rapport avec la SC
-						    } \
-						    default {
-							APG_vrb_dispwarning "Commande non reconnue"
-						    } 
-				}
+		# Extraction du contenu
+		set content [APG_msg_splitstr what $::HLG_rc_mnemomtx]
+		switch -- $content \
+		    $::HLG_mtx_req {
+				# Demande d'entrée en SC de BAS 
+				HLG_bas_cs_req
+		    } \
+		    $::HLG_mtx_lib {
+				# Fin de SC de BAS
+				set ::HLG_int [APG_msg_splitstr what $::HLG_rc_mnemoscstring]	
+				HLG_bas_cs_lib
+		    } \
+		    $::HLG_mtx_nul {
+				# Message sans rapport avec les mutex, à diffuser normalement
+				# TODO
+		    } \
+		    default {
+				APG_vrb_dispwarning "$::APG_ident Message malformé : $content" "APG_receive_whatwho"
+	    } 
+	}
 }
 
 

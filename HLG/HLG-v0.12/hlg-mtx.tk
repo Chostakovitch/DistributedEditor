@@ -102,7 +102,6 @@ proc HLG_hlg_cs_req { h from } {
 
     # Seul un HLG va traiter le message (cf mnemotarget) 
     HLG_snd_send $acc $::APP
-
     APG_vrb_dispwarning "$::APG_ident Demande d'entrée en SC du site $from prise en compte" "HLG_hlg_cs_req"
 
     # Site demandeur ayant la plus petite estampille
@@ -126,7 +125,7 @@ proc HLG_hlg_cs_req { h from } {
 }
 
 # GARDE : Reception d'un message de type liberation
-proc HLG_hlg_cs_lib { h from int } {
+proc HLG_hlg_cs_lib { h from string } {
 
     # MAJ de l'estampille locale
     HLG_lam_update $h
@@ -187,7 +186,7 @@ proc HLG_hlg_cs_acc { h from } {
 	set ::tab($from$::HLG_mtx_datesuffix)  $h
     }
 
-    APG_vrb_dispwarning "$::APG_ident Réception de l'accusé de réception de $from" "HLG_hlg_cs_acc"
+    APG_vrb_dispwarning "$::APG_ident Réception d'un accusé de réception" "HLG_hlg_cs_acc"
 
     # Site demandeur ayant la plus petite estampille
     set min [HLG_lam_tab_min]
@@ -237,7 +236,7 @@ foreach option $APG_lstargs {
 		APG_vrb_dispwarning "option $name found without argument ; ignored" "hlg-snp"
 	    } else {
 		set HLG_snp_h $value
-		APG_vrb_dispnotif "option $option found; initial snapshot value=$value" "hlg-snp"
+		APG_vrb_dispwarning "option $option found; initial snapshot value=$value" "hlg-snp"
             }
 	}
     }

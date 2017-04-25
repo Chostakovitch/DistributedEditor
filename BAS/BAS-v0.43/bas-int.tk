@@ -79,7 +79,7 @@ proc BAS_shared_effectivesc { } {
 	.shared.btsc configure -textvariable ::BAS_shared_leavesc -state normal
 	set ::BAS_shared_insc true
 
-	APG_vrb_dispdebug "$::APG_ident Entrée effective en SC" "BAS_shared_effectivesc"
+	APG_vrb_dispwarning "$::APG_ident Entrée effective en SC" "BAS_shared_effectivesc"
 }
 
 # Requete de SC
@@ -87,7 +87,7 @@ proc BAS_shared_req { } {
     set msg [APG_msg_createmsg $::BAS_rc_mnemomtx $::BAS_mtx_req]
     APG_send_whatwho $msg $::BAS_rc_netdefault
 
-    APG_vrb_dispdebug "$::APG_ident Demande d'entrée en SC" "BAS_shared_req"
+    APG_vrb_dispwarning "$::APG_ident Demande d'entrée en SC" "BAS_shared_req"
 }
 
 # Liberation de SC
@@ -96,14 +96,14 @@ proc BAS_shared_free { } {
     APG_msg_addmsg msg $::BAS_rc_mnemoscstring $::BAS_shared_var
     APG_send_whatwho $msg $::BAS_rc_netdefault
 
-    APG_vrb_dispdebug "$::APG_ident Fin de SC" "BAS_shared_free"
+    APG_vrb_dispwarning "$::APG_ident Fin de SC" "BAS_shared_free"
 }
 
 # MAJ de la SC apres liberation du mutex par un BAS distant :
 proc BAS_shared_upd { string } {
     set ::BAS_shared_var $string
 
-    APG_vrb_dispdebug "$::APG_ident Mise à jour distante" "BAS_shared_upd"
+    APG_vrb_dispwarning "$::APG_ident Mise à jour distante" "BAS_shared_upd"
 }
 
 ###############################################################################

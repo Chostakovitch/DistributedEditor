@@ -78,7 +78,7 @@ foreach option $APG_lstargs {
 								APG_vrb_dispwarning "option $name trouvee sans argument, utilisation de la valeur par defaut : $BAS_snd_app"
 						} else {
 								set BAS_snd_app $value
-								APG_vrb_dispnotif "option $option trouvee, nouvelle application : $BAS_snd_app"
+								APG_vrb_dispwarning "option $option trouvee, nouvelle application : $BAS_snd_app"
 						}
 				}
 				
@@ -88,14 +88,14 @@ foreach option $APG_lstargs {
 								APG_vrb_dispwarning "option $name trouvee sans argument, utilisation de la valeur par defaut : $BAS_snd_delay"
 						} else {
 								set BAS_snd_delay $value
-								APG_vrb_dispnotif "option $option trouvee, nouvelle periode : $BAS_snd_delay"
+								APG_vrb_dispwarning "option $option trouvee, nouvelle periode : $BAS_snd_delay"
 						}
 				}
 
 				--autosend {
 						# emission automatique --------------------------------------------#
 						set BAS_snd_autosend true
-						APG_vrb_dispnotif "option $option trouvee, mode emission automatique active"
+						APG_vrb_dispwarning "option $option trouvee, mode emission automatique active"
 				}
     }
 }
@@ -138,7 +138,7 @@ proc BAS_snd_autosend { } {
 
     APG_send_whatwho $msg $::BAS_snd_app
 
-    APG_vrb_dispnotif "$::APG_ident Envoi de $msg à $::BAS_snd_app" "BAS_sng_autosend"
+    APG_vrb_dispwarning "$::APG_ident Envoi de $msg à $::BAS_snd_app" "BAS_sng_autosend"
 
 	after $::BAS_snd_delay BAS_snd_autosend
 }

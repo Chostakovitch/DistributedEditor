@@ -35,7 +35,7 @@ foreach option $APG_lstargs {
     		APG_vrb_dispwarning "option $name found without argument ; ignored" "hlg-lam"
     	    } else {
     		set HLG_lam_h $value
-    		APG_vrb_dispnotif "option $option found; initial Lamport's clock value=$value" "hlg-lam"
+    		APG_vrb_dispwarning "option $option found; initial Lamport's clock value=$value" "hlg-lam"
                 }
     	}
     }

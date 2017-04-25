@@ -56,7 +56,7 @@ foreach option $APG_lstargs {
 			if { $value == "" } {
 					APG_vrb_dispwarning "option $name trouvee sans argument ; ignoree"
 			} else {
-					APG_vrb_dispnotif "option $option trouvee, abonnement a l'app source $value"
+					APG_vrb_dispwarning "option $option trouvee, abonnement a l'app source $value"
 					APG_begin_lch $value
 			}
 		}
@@ -96,7 +96,7 @@ proc APG_receive_whatwho { what who } {
 		if { $target == $::HLG_tgt_local || $inter == $::HLG_itr_broadcast } then {   
 		    switch -- $content \
 			$::HLG_mtx_req {
-				# Cas d'une demande d'entrée en SC d'un site distante
+				# Cas d'une demande d'entrée en SC d'un site distant
 			    HLG_hlg_cs_req $h_rcv $target 
 			} \
 			$::HLG_mtx_lib {
@@ -125,7 +125,7 @@ proc APG_receive_whatwho { what who } {
 		    } \
 		    $::HLG_mtx_lib {
 				# Fin de SC de BAS
-				set ::HLG_int [APG_msg_splitstr what $::HLG_rc_mnemoscstring]	
+				set ::HLG_string [APG_msg_splitstr what $::HLG_rc_mnemoscstring]	
 				HLG_bas_cs_lib
 		    } \
 		    $::HLG_mtx_nul {

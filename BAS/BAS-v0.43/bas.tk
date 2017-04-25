@@ -86,7 +86,7 @@ source $PATH/rc-bas.tk
 source $PATH/bas-snd.tk
 source $PATH/bas-rcv.tk
 source $PATH/bas-svg.tk
-source $PATH/bas-int.tk
+source $PATH/bas-shared-string.tk
 
 ## Ajout des zones crees, avec option d'affichage
 APG_int_addzone snd "Emissions" 1

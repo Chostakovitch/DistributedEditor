@@ -65,7 +65,7 @@ proc APG_receive_whatwho { what who } {
 			# Note : il peut sembler étrange de mettre à jour la donnée lors d'une entrée
 			# en SC. Mais la procédure HLG_hlg_cs_lib (hlg-mtx.tk) envoit soit un message
 			# d'update, soit un message de début en fonction des cas après libération, pour
-			# ne pas multiplier les messages.
+			# ne pas multiplier les messages.		
 			set remote_string [APG_msg_splitstr what $::BAS_rc_mnemoscstring]
 			BAS_shared_upd $remote_string
 	    } \

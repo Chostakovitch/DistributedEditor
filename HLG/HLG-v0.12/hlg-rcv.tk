@@ -18,7 +18,11 @@ set HLG_des_app $APG_msg_unknown
 # Mnémonique pour le nom de l'application émettrice dans le message
 set HLG_rcv_mnemoapp $HLG_rc_mnemoapp
 
+<<<<<<< HEAD
 # Mnémonique pour le header HLG, contenant la valeur de l'horloge de Lamport
+=======
+# Mnémonique pour le header HLG, contenant l'horloge vectorielle sérialisée
+>>>>>>> vector-branch
 set HLG_rcv_mnemoclk $HLG_rc_mnemoclk
 
 # Mnémonique Payload
@@ -43,7 +47,7 @@ labelframe .rcv -pady 2 -padx 2 \
 label .rcv.t1 -text "Dernier message reçu de "
 label .rcv.app -textvariable HLG_rcv_app -width 4 -fg $APG_int_colmsgrcv
 label .rcv.t2 -text " : "
-label .rcv.msg -textvariable HLG_rcv_msg -width 64  -fg $APG_int_colmsgrcv -anchor w
+label .rcv.msg -textvariable HLG_rcv_msg -width 80  -fg $APG_int_colmsgrcv -anchor w
 #TODO add destination label
 label .rcv.t3 -text "vers "
 label .rcv.des -textvariable HLG_des_app -width 4 -fg $APG_int_colmsgrcv
@@ -85,7 +89,7 @@ foreach option $APG_lstargs {
 # Retour : donnee formatee, qui sera ecrite dans le fichier de sauvegarde.    #
 #-----------------------------------------------------------------------------#
 proc APG_svg_formatlastdata { } {
-	return "END"
+	return ""
 }
 #SURCHARGE
 #-- Procedure APG_svg_formatfirstdata ----------------------------------------#
@@ -98,7 +102,15 @@ proc APG_svg_formatlastdata { } {
 #-----------------------------------------------------------------------------#
 #TODO : rajouter la variable partagee dans le snap
 proc APG_svg_formatfirstdata { } {
+<<<<<<< HEAD
 	return "Date $::APG_svg_delim $::HLG_lam_h $::APG_svg_delim $::HLG_string"
+=======
+	set snapshot "\nSauvegarde site $::APG_svg_delim $::APG_ident"
+	append snapshot "\nHorloge $::APG_svg_delim " 
+	append snapshot [HLG_vec_serialize]
+	append snapshot "\nVariable $::APG_svg_delim $::HLG_string"
+	return $snapshot
+>>>>>>> vector-branch
 }
 #-- Procedure HLG_take_snap --------------------------------------------------#
 # Action : gere la realisation du snapshot                                    #
@@ -138,7 +150,6 @@ proc APG_receive_whatwho { what who } {
 	switch -- $::HLG_rcv_app \
 	$::APP {
 		# Reception d'un message d'une application HLG distante
-
 		# Extraction du contenu
 		set content [APG_msg_splitstr what $::HLG_rc_mnemomtx]
 		# Extraction du destinataire
@@ -155,7 +166,6 @@ proc APG_receive_whatwho { what who } {
 		# alors le site prend un snapshot
 		# La couleur sert juste à définir si le snapshot a deja ete pris ou non
 		if {$snap_rcv != $::HLG_rcv_color_snap && $snap_rcv != "-"} {
-			puts "AAAAAAAAAA $snap_rcv"
 			HLG_altern_color
 			HLG_take_snap
 		}
@@ -176,8 +186,11 @@ proc APG_receive_whatwho { what who } {
 				# Cas d'un accusé de réception, on le traite
 				HLG_hlg_cs_acc $h_rcv $target 
 			} \
-			$::HLG_mtx_nul {
-				HLG_lam_update $h_rcv
+			default {
+				APG_vrb_dispwarning "$::APG_ident Message malformé : $content" "APG_receive_whatwho"
+			} 
+		} elseif { $content == $::HLG_mtx_nul } then {
+				HLG_vec_update $h_rcv
 
 				# Cas d'un message standard à transmettre à BAS
 				set header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
@@ -187,13 +200,10 @@ proc APG_receive_whatwho { what who } {
 				set nseq [APG_msg_splitstr what $::HLG_rc_mnemonseq]
 				APG_msg_addmsg msg $::HLG_rc_mnemopayload $payload
 				APG_msg_addmsg msg $::HLG_rc_mnemonseq $nseq
+				APG_msg_addmsg msg $::HLG_rc_mnemomtx $::HLG_mtx_nul
 				set to_send [APG_msg_concatemsg $header $msg]
 
 				HLG_snd_send $to_send $::HLG_rc_basdefault
-			} \
-			default {
-				APG_vrb_dispwarning "$::APG_ident Message malformé : $content" "APG_receive_whatwho"
-			} 
 		}
 	} \
 	default {
@@ -207,7 +217,8 @@ proc APG_receive_whatwho { what who } {
 			HLG_take_snap
 
 			set header [APG_msg_createmsg $::HLG_rcv_mnemoapp $who]
-			APG_msg_addmsg header $::HLG_rcv_mnemoclk [HLG_lam_incrandget]
+			HLG_vec_incr
+			APG_msg_addmsg header $::HLG_rcv_mnemoclk [HLG_vec_serialize]
 
 			# Ajout du champ du snapshot
 			 APG_msg_addmsg header $::HLG_rcv_mnemosnp $::HLG_rcv_color_snap
@@ -229,7 +240,8 @@ proc APG_receive_whatwho { what who } {
 				$::HLG_mtx_nul {
 					# Message sans rapport avec les mutex, à diffuser normalement
 					set header [APG_msg_createmsg $::HLG_rcv_mnemoapp $who]
-					APG_msg_addmsg header $::HLG_rcv_mnemoclk [HLG_lam_incrandget]
+					HLG_vec_incr
+					APG_msg_addmsg header $::HLG_rcv_mnemoclk [HLG_vec_serialize]
 					set msg [APG_msg_concatemsg $header $what]
 					HLG_snd_send $msg $::APP
 				} \

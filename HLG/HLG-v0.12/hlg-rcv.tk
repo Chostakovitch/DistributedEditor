@@ -18,11 +18,7 @@ set HLG_des_app $APG_msg_unknown
 # Mnémonique pour le nom de l'application émettrice dans le message
 set HLG_rcv_mnemoapp $HLG_rc_mnemoapp
 
-<<<<<<< HEAD
-# Mnémonique pour le header HLG, contenant la valeur de l'horloge de Lamport
-=======
 # Mnémonique pour le header HLG, contenant l'horloge vectorielle sérialisée
->>>>>>> vector-branch
 set HLG_rcv_mnemoclk $HLG_rc_mnemoclk
 
 # Mnémonique Payload
@@ -102,16 +98,13 @@ proc APG_svg_formatlastdata { } {
 #-----------------------------------------------------------------------------#
 #TODO : rajouter la variable partagee dans le snap
 proc APG_svg_formatfirstdata { } {
-<<<<<<< HEAD
-	return "Date $::APG_svg_delim $::HLG_lam_h $::APG_svg_delim $::HLG_string"
-=======
 	set snapshot "\nSauvegarde site $::APG_svg_delim $::APG_ident"
 	append snapshot "\nHorloge $::APG_svg_delim " 
 	append snapshot [HLG_vec_serialize]
 	append snapshot "\nVariable $::APG_svg_delim $::HLG_string"
 	return $snapshot
->>>>>>> vector-branch
 }
+
 #-- Procedure HLG_take_snap --------------------------------------------------#
 # Action : gere la realisation du snapshot                                    #
 # Entree : rien                                                               #

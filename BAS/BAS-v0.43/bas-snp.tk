@@ -53,7 +53,7 @@ proc BAS_snp_btsnp { } {
 		# Incrementation du numero de message
 		incr ::BAS_snd_nseq
 
-    		# Creation du message -> payload = SNAP
+		# Creation du message -> payload = SNAP
   		set msg [APG_msg_createmsg $::BAS_snd_mnemopayload $::BAS_snp_msg]
 
 		# Ajout du numero de sequence

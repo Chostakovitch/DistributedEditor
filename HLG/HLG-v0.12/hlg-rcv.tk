@@ -85,7 +85,7 @@ foreach option $APG_lstargs {
 # Retour : donnee formatee, qui sera ecrite dans le fichier de sauvegarde.    #
 #-----------------------------------------------------------------------------#
 proc APG_svg_formatlastdata { } {
-	return "END"
+	return ""
 }
 #SURCHARGE
 #-- Procedure APG_svg_formatfirstdata ----------------------------------------#
@@ -98,7 +98,11 @@ proc APG_svg_formatlastdata { } {
 #-----------------------------------------------------------------------------#
 #TODO : rajouter la variable partagee dans le snap
 proc APG_svg_formatfirstdata { } {
-	return "Date $::APG_svg_delim $::HLG_vec_h $::APG_svg_delim $::HLG_string"
+	set snapshot "\nSauvegarde site $::APG_svg_delim $::APG_ident"
+	append snapshot "\nHorloge $::APG_svg_delim " 
+	append snapshot [HLG_vec_serialize]
+	append snapshot "\nVariable $::APG_svg_delim $::HLG_string"
+	return $snapshot
 }
 #-- Procedure HLG_take_snap --------------------------------------------------#
 # Action : gere la realisation du snapshot                                    #
@@ -163,22 +167,22 @@ proc APG_receive_whatwho { what who } {
 			switch -- $content \
 			$::HLG_mtx_req {
 				# Cas d'une demande d'entrée en SC d'un site distant
-				HLG_hlg_cs_req [HLG_vec_deserialize $h_rcv] $target 
+				HLG_hlg_cs_req $h_rcv $target 
 			} \
 			$::HLG_mtx_lib {
 				# Cas d'une libération de la variable partagée distante, mise à jour
 				set string [APG_msg_splitstr what $::HLG_rc_mnemoscstring]
-				HLG_hlg_cs_lib [HLG_vec_deserialize $h_rcv] $target $string
+				HLG_hlg_cs_lib $h_rcv $target $string
 			} \
 			$::HLG_mtx_acc {
 				# Cas d'un accusé de réception, on le traite
-				HLG_hlg_cs_acc [HLG_vec_deserialize $h_rcv] $target 
+				HLG_hlg_cs_acc $h_rcv $target 
 			} \
 			default {
 				APG_vrb_dispwarning "$::APG_ident Message malformé : $content" "APG_receive_whatwho"
 			} 
 		} elseif { $content == $::HLG_mtx_nul } then {
-				HLG_vec_update [HLG_vec_deserialize $h_rcv]
+				HLG_vec_update $h_rcv
 
 				# Cas d'un message standard à transmettre à BAS
 				set header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]

@@ -51,7 +51,7 @@ foreach option $APG_lstargs {
 proc HLG_vec_tab_min { } {
     set min_key $::APG_ident$::HLG_mtx_datesuffix
     set min_value $::tab($::APG_ident$::HLG_mtx_datesuffix)
-
+    APG_vrb_dispwarning [array get ::tab]
     #Valeurs 2 à 2 de la file d'attente
     foreach {key value} [array get ::tab] {
         # Vérification de principe
@@ -82,39 +82,36 @@ proc HLG_vec_tab_min { } {
 # Output : estampille du site local                                           #
 #-----------------------------------------------------------------------------#
 proc HLG_vec_incrandget { } {
-    dict incr $::HLG_vec_h $::APG_ident
+    set lamp [dict incr ::HLG_vec_h $::APG_ident]
     return [dict get $::HLG_vec_h $::APG_ident]
 }
 
 proc HLG_vec_incr { } {
-    dict incr $::HLG_vec_h $::APG_ident
+    dict incr ::HLG_vec_h $::APG_ident
 }
 
 #-- Procedure HLG_vec_update -------------------------------------------------#
 # Action : update the vector clock, h <- MAX(h_rcv, h) [+ 1 si site courant]  #
-# Input  : received vector clock                                              #
-# Output : nothing                                                            #
+# Input  : received vector clock (serialized)                                 #
+# Output : horloge vectorielle désérialisée                                   #
 #-----------------------------------------------------------------------------#
 proc HLG_vec_update { h_rcv } {
-    # Récupération de l'horloge vectorielle distante
-    set vec [HLG_vec_deserialize h_rcv]
+    # On incrémente systématiquement l'estampille courante
+     HLG_vec_incr
 
+    # Récupération de l'horloge vectorielle distante
+    set vec [HLG_vec_deserialize $h_rcv]
     # On itère sur toutes les estampilles distantes
     foreach {key value} $vec {
         # On découvre un site, on le rajoute
         if {[dict exists $::HLG_vec_h $key] == 0} {
-            dict set $::HLG_vec_h $key $value
-        } else {
-            # On connaît déjà le site, on compare les estampilles
-            if {[string compare $key $::APG_ident] == 0} {
-                # Cas où il s'agit du site courant, on augmente juste l'estampille
-                HLG_vec_incr
-            } else {
-                # Cas d'un site distant connu, on met à jour selon le maximum des estampilles
-                dict set $::HLG_vec_h $key [::math::max [dict get $::HLG_vec_h $key] $value]
-            }
+            dict set ::HLG_vec_h $key $value
+        } elseif {[string compare $key $::APG_ident] != 0} {
+            # Tous les sites différents du site courants
+            dict set ::HLG_vec_h $key [::math::max [dict get $::HLG_vec_h $key] $value]
         }
     }
+    return $vec
 }
 
 #-- Procedure HLG_vec_serialize -------------------------------------------------#
@@ -126,13 +123,13 @@ proc HLG_vec_serialize { } {
     set serial ""
     foreach {key value} $::HLG_vec_h {
         # Codage décidé pour la sérialisation
-        append $serial "$key"
-        append $serial "#"
-        append $serial "$value"
-        append $serial "_"
+        append serial "$key"
+        append serial "#"
+        append serial "$value"
+        append serial "_"
     }
     # Caractère restant
-    string trimright $serial "_"
+    set serial [string trim $serial "_"]
     return $serial
 }  
 

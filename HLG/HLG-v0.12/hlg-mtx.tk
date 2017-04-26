@@ -19,68 +19,49 @@ proc HLG_mtx_init { } {
     APG_vrb_dispwarning "$::APG_ident initialisation de la file d'attente partagée" "HLG_mtx_init"    
 }
 
-# GARDE : Reception d'une demande de section critique de l'appli de base
-proc HLG_bas_cs_req { } {
-
-    # Changement d'etat : on passe en requete
-    set ::tab($::APG_ident$::HLG_mtx_statesuffix) $::HLG_mtx_req
+# Procédure de factorisation pour les requêtes / fin SC de l'appli de base
+proc HLG_mtx_broadcast { state } {
+    # Changement d'etat
+    set ::tab($::APG_ident$::HLG_mtx_statesuffix) $state
     set ::tab($::APG_ident$::HLG_mtx_datesuffix) [HLG_vec_incrandget]
 
     # Mise en place d'un header 
-    set req_header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
+    set header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
     # Message non-destine a BAS 
-    APG_msg_addmsg req_header $::HLG_rc_mnemotarget $::HLG_tgt_local
+    APG_msg_addmsg header $::HLG_rc_mnemotarget $::HLG_tgt_local
     # Broadcast (destine a tous les HLG) 
-    APG_msg_addmsg req_header $::HLG_rc_mnemointer $::HLG_itr_broadcast
+    APG_msg_addmsg header $::HLG_rc_mnemointer $::HLG_itr_broadcast
     # Insertion de l'horloge dans le message de requete
-    APG_msg_addmsg req_header $::HLG_rc_mnemoclk [HLG_vec_serialize]
+    APG_msg_addmsg header $::HLG_rc_mnemoclk [HLG_vec_serialize]
 
-    # Creation du message de requete 
-    set req_msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_req]
+    # Creation du message  
+    set inf_msg [APG_msg_createmsg $::HLG_rc_mnemomtx $state]
 
-    set req [APG_msg_concatemsg $req_header $req_msg]
+    # Ajout de la valeur finale de la variable en section critique (pour info & mise à jour)
+    APG_msg_addmsg inf_msg $::HLG_rc_mnemoscstring $::HLG_string
+
+    set msg [APG_msg_concatemsg $header $inf_msg]
 
     # Envoi a tous les HLG
-    HLG_snd_send $req $::APP
+    HLG_snd_send $msg $::APP
 
-    APG_vrb_dispwarning "$::APG_ident Broadcast de la demande de SC" "HLG_bas_cs_req"
+    APG_vrb_dispwarning "$::APG_ident Broadcast ($state)" "HLG_mtx_broadcast"
+}
+
+# GARDE : Reception d'une demande de section critique de l'appli de base
+proc HLG_bas_cs_req { } {
+    HLG_mtx_broadcast $::HLG_mtx_req
 }
 
 # GARDE : Réception fin de section critique de l'appli de base
 proc HLG_bas_cs_lib { } {
-
-    # Changement d'etat : on passe en liberation du mutex
-    set ::tab($::APG_ident$::HLG_mtx_statesuffix) $::HLG_mtx_lib
-    set ::tab($::APG_ident$::HLG_mtx_datesuffix) [HLG_vec_incrandget]
-
-    # Creation du header
-    set lib_header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
-    # Message non-destine a BAS 
-    APG_msg_addmsg lib_header $::HLG_rc_mnemotarget $::HLG_tgt_local
-    # Broadcast (destine a tous les HLG) 
-    APG_msg_addmsg lib_header $::HLG_rc_mnemointer $::HLG_itr_broadcast
-    # Insertion de l'horloge dans le message de requete
-    APG_msg_addmsg lib_header $::HLG_rc_mnemoclk [HLG_vec_serialize]
-
-    # Creation du message de liberation
-    set lib_msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_lib]
-
-    # Ajout de la valeur finale de la variable en section critique (pour mise à jour)
-    APG_msg_addmsg lib_msg $::HLG_rc_mnemoscstring $::HLG_string
-
-    set lib [APG_msg_concatemsg $lib_header $lib_msg]
-
-    # Envoi a tous les HLG
-    HLG_snd_send $lib $::APP
-
-    APG_vrb_dispwarning "$::APG_ident Broadcast de la fin de SC avec la chaîne $::HLG_string" "HLG_bas_cs_lib"
+    HLG_mtx_broadcast $::HLG_mtx_lib
 }
 
 # GARDE : Reception d'un message de type demande d'entrée en SC (d'une application distante)
 proc HLG_hlg_cs_req { h from } {
-
     # MAJ de l'horloge vectorielle locale
-    HLG_vec_update $h
+    set h [HLG_vec_update $h]
 
     # MAJ de l'etat et de l'estampille du site distant 
     set ::tab($from$::HLG_mtx_statesuffix) $::HLG_mtx_req
@@ -126,9 +107,8 @@ proc HLG_hlg_cs_req { h from } {
 
 # GARDE : Reception d'un message de type liberation
 proc HLG_hlg_cs_lib { h from string } {
-
-    # MAJ de l'estampille locale
-    HLG_vec_update $h
+    # MAJ de l'horloge vectorielle locale
+    set h [HLG_vec_update $h]
 
     # MAJ de l'etat du site informant de la liberation
     set ::tab($from$::HLG_mtx_statesuffix) $::HLG_mtx_lib
@@ -176,9 +156,8 @@ proc HLG_hlg_cs_lib { h from string } {
 
 #GARDE : Reception d'un message de type accuse
 proc HLG_hlg_cs_acc { h from } {
-
-    # MAJ de l'estampille locale :
-    HLG_vec_update $h
+    # MAJ de l'horloge vectorielle locale
+    set h [HLG_vec_update $h]
 
     # On n'ecrase pas une requete par un etat acc :
     if { $::tab($from$::HLG_mtx_statesuffix) != $::HLG_mtx_req } {

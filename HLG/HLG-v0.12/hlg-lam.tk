@@ -1,0 +1,69 @@
+#    hlg
+#    an airplug compatible program
+#    author: Bertrand Ducourthial AT utc.fr, newapp from NET v0.31
+#    license type: free of charge license for academic and research purpose
+#    see license.txt
+### MODULE LAMPORT'S CLOCK ####################################################
+
+package require math
+
+### VARIABLES OF THE MODULE ###################################################
+
+set HLG_lam_h $HLG_rc_lamh
+
+###############################################################################
+
+
+### GRAPHICAL AREA OF THE MODULE ##############################################
+
+labelframe .lam -pady 2 -padx 2 -text "Lamport's clock \[$APP, ident=$APG_ident\]" -fg $APG_int_coltitle
+label .lam.t -text "Local Lamport's clock = "
+label .lam.h -textvariable HLG_lam_h -width 4 -anchor w
+pack .lam.t .lam.h -side left
+
+###############################################################################
+
+
+### COMMAND LINE OPTION #######################################################
+
+foreach option $APG_lstargs {
+	set name [lindex [split $option "="] 0]
+	set value [lindex [split $option "="] 1]
+
+	switch -- $name {
+		--hlg-hini {
+			if { $value == "" } {
+				ARP_vrb_dispwarning "option $name found without argument ; ignored" "hlg-lam"
+			} else {
+				set HLG_lam_h $value
+				APG_vrb_dispnotif "option $option found ; initial Lamport's clock value=$value" "hlg-lam"
+			}
+		}
+	}
+}
+
+###############################################################################
+
+
+### PROCEDURES OF THE MODULE ##################################################
+
+#-- Procedue HLG_lam_incrandget ----------------------------------------------#
+# Action : increments the clock and returns it 								  #
+# Input : nothing															  #
+# Output : clock 															  #
+# ----------------------------------------------------------------------------#
+###############################################################################
+proc HLG_lam_incrandget { } {
+	incr ::HLG_lam_h
+	return $::HLG_lam_h
+}
+
+#-- Procedure HLG_lam_update -------------------------------------------------#
+# Action : update the clock, h <- max(h_rcv, h) + 1                           #
+# Input  : received clock                                                     #
+# Output : nothing                                                            #
+#-----------------------------------------------------------------------------#
+proc HLG_lam_update { h_rcv } {
+    set ::HLG_lam_h [::math::max $h_rcv $::HLG_lam_h ]
+    incr ::HLG_lam_h
+}

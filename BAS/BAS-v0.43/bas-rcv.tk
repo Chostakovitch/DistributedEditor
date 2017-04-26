@@ -43,10 +43,45 @@ pack .rcv.t1 .rcv.app .rcv.t2 .rcv.msg .rcv.t3 .rcv.nseq -side left -fill y -pad
 #-----------------------------------------------------------------------------#
 proc APG_receive_whatwho { what who } {
     # Recuperation du payload et mise a jour affichage
-    set ::BAS_rcv_type [APG_msg_splitstr what $::BAS_snd_mnemotype]
     set ::BAS_rcv_msg  [APG_msg_splitstr what $::BAS_snd_mnemopayload]
     set ::BAS_rcv_nseq  [APG_msg_splitstr what $::BAS_snd_mnemonseq]
     set ::BAS_rcv_app $who
-    APG_vrb_dispdebug "type = $::BAS_rcv_type, what = $what, who=$::BAS_rcv_app, payload=$::BAS_rcv_msg" "APG_receive_what"
+    
+    # Extraction du contenu
+    set content [APG_msg_splitstr what $::BAS_rc_mnemomtx]
+
+    # Extraction du destinataire
+    set target [APG_msg_splitstr what $::BAS_rc_mnemotarget]
+
+    if { $target == $::APG_ident } {
+	switch -- $content \
+	    $::BAS_mtx_deb { 
+			# Autorisation d'entrée en SC
+			APG_vrb_dispwarning "$::APG_ident Autorisation d'entrée en SC" "APG_receive_whatwho"
+
+			# Modification de l'interface pour manipuler la chaîne
+			BAS_shared_effectivesc
+
+			# Note : il peut sembler étrange de mettre à jour la donnée lors d'une entrée
+			# en SC. Mais la procédure HLG_hlg_cs_lib (hlg-mtx.tk) envoit soit un message
+			# d'update, soit un message de début en fonction des cas après libération, pour
+			# ne pas multiplier les messages.		
+			set remote_string [APG_msg_splitstr what $::BAS_rc_mnemoscstring]
+			BAS_shared_upd $remote_string
+	    } \
+	    $::BAS_mtx_upd { 
+			# Fin de SC d'une autre application, mise à jour de la chaîne
+			APG_vrb_dispwarning "$::APG_ident Mise à jour distante de la chaîne" "APG_receive_whatwho"
+
+			set remote_string [APG_msg_splitstr what $::BAS_rc_mnemoscstring]
+			BAS_shared_upd $remote_string
+	    } \
+	    $::BAS_mtx_nul {
+	    	# Déjà pris en charge au début de la fonction
+	    } \
+	    default {
+			APG_vrb_dispwarning "$::APG_ident $content non pris en charge"
+	    }
+    }
 }
 

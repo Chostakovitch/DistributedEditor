@@ -8,6 +8,7 @@
 ### VARIABLES DU MODULE #######################################################
 set HLG_snd_msg $APG_msg_unknown
 set HLG_snd_app $APG_msg_unknown
+set HLG_snd_des $APG_msg_unknown
 ###############################################################################
 
 
@@ -35,7 +36,6 @@ pack .snd.msg .snd.app -side left -fill y -pady 2
 # Retour : rien                                                               #
 #-----------------------------------------------------------------------------#
 proc HLG_snd_send { what who } {
-
 		# Mise a jour de l'interface du module snd.
 		set ::HLG_snd_msg $what
 		set ::HLG_snd_app $who

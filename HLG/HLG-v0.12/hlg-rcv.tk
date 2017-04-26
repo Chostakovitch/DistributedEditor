@@ -6,14 +6,16 @@
 ### MODULE RECEPTION ##########################################################
 
 ### VARIABLES DU MODULE #######################################################
-# dernier message recu
+# Dernier message recu
 set HLG_rcv_msg $APG_msg_unknown
 
-# application emettrice du dernier message (en cas d'option --whatwho)
+# Application emettrice du dernier message (en cas d'option --whatwho)
 set HLG_rcv_app $APG_msg_unknown
 
-# mnemonique pour le header HLG, contenant le nom de l'application qui a emis
-# le message transporte.
+# Application destinataire du dernier message (en cas d'option --whatwhowhere)
+set HLG_des_app $APG_msg_unknown
+
+# Mnémonique pour le nom de l'application émettrice dans le message
 set HLG_rcv_mnemoapp $HLG_rc_mnemoapp
 
 # Mnémonique pour le header HLG, contenant la valeur de l'horloge de Lamport
@@ -31,44 +33,45 @@ set HLG_rcv_mnemosnp $HLG_rc_mnemosnp
 # Couleur rouge/blanc pour l'inplémentation de l'algo avec lestage
 set HLG_rcv_color_snap $HLG_rc_color_snap
 
-
 ###############################################################################
-
 
 ### ZONE DU MODULE ############################################################
 ## zone du module reception
 labelframe .rcv -pady 2 -padx 2 \
-    -text "Réception \[$APP, ident = $APG_ident\]"  -fg $APG_int_coltitle
+	-text "Réception \[$APP, ident = $APG_ident\]"  -fg $APG_int_coltitle
 
 label .rcv.t1 -text "Dernier message reçu de "
 label .rcv.app -textvariable HLG_rcv_app -width 4 -fg $APG_int_colmsgrcv
 label .rcv.t2 -text " : "
 label .rcv.msg -textvariable HLG_rcv_msg -width 64  -fg $APG_int_colmsgrcv -anchor w
-pack .rcv.t1 .rcv.app .rcv.t2 .rcv.msg -side left -fill y -pady 2
+#TODO add destination label
+label .rcv.t3 -text "vers "
+label .rcv.des -textvariable HLG_des_app -width 4 -fg $APG_int_colmsgrcv
+pack .rcv.t1 .rcv.app .rcv.t2 .rcv.msg .rcv.t3 .rcv.des -side left -fill y -pady 2
 
 # affichage des sous-zones de la zone rcv
-pack .rcv.msg .rcv.app -side left -fill y -pady 2
+pack .rcv.msg .rcv.app .rcv.des -side left -fill y -pady 2
 ###############################################################################
 
 
 ### OPTIONS DE LA LIGNE DE COMMANDE ###########################################
 foreach option $APG_lstargs {
-    set name [lindex [split $option "="] 0]
-    set value [lindex [split $option "="] 1]
-    
-    switch -- $name {
-				--source {
-						#--------------------------------------------------------------------------------
-						# applications emettrices auxquelles il faut s'abonner
-						#--------------------------------------------------------------------------------
-						if { $value == "" } {
-								APG_vrb_dispwarning "option $name trouvee sans argument ; ignoree"
-						} else {
-								APG_vrb_dispnotif "option $option trouvee, abonnement a l'app source $value"
-								APG_begin_lch $value
-						}
-				}
-    }
+	set name [lindex [split $option "="] 0]
+	set value [lindex [split $option "="] 1]
+	
+	switch -- $name {
+		--source {
+			#--------------------------------------------------------------------------------
+			# applications emettrices auxquelles il faut s'abonner
+			#--------------------------------------------------------------------------------
+			if { $value == "" } {
+					APG_vrb_dispwarning "option $name trouvee sans argument ; ignoree"
+			} else {
+					APG_vrb_dispwarning "option $option trouvee, abonnement a l'app source $value"
+					APG_begin_lch $value
+			}
+		}
+	}
 }
 ###############################################################################
 
@@ -82,7 +85,7 @@ foreach option $APG_lstargs {
 # Retour : donnee formatee, qui sera ecrite dans le fichier de sauvegarde.    #
 #-----------------------------------------------------------------------------#
 proc APG_svg_formatlastdata { } {
-    return "END"
+	return "END"
 }
 #SURCHARGE
 #-- Procedure APG_svg_formatfirstdata ----------------------------------------#
@@ -95,7 +98,7 @@ proc APG_svg_formatlastdata { } {
 #-----------------------------------------------------------------------------#
 #TODO : rajouter la variable partagee dans le snap
 proc APG_svg_formatfirstdata { } {
-    return "Date $::APG_svg_delim $::HLG_lam_h"
+	return "Date $::APG_svg_delim $::HLG_lam_h"
 }
 #-- Procedure HLG_take_snap --------------------------------------------------#
 # Action : gere la realisation du snapshot                                    #
@@ -109,7 +112,7 @@ proc HLG_take_snap { } {
 
 #-- Procedure HLG_altern_color -----------------------------------------------#
 # Action : Gestion des couleurs pour le declenchement du snap                 #
-#	   Si site BLANC -> deviens ROUGE et inversement                      #
+#	   Si site BLANC -> deviens ROUGE et inversement                          #
 # Entree : rien                                                               #
 # Retour : rien                                                               #
 #-----------------------------------------------------------------------------#
@@ -126,91 +129,112 @@ proc HLG_altern_color { } {
 # Entree : payload et emetteur                                                #
 # Retour : rien                                                               #
 #-----------------------------------------------------------------------------#
-
 proc APG_receive_whatwho { what who } {
-
-		# Mise a jour de l'interface du module rcv.
-    set ::HLG_rcv_msg $what
-    set ::HLG_rcv_app $who
+	# Mise a jour de l'interface du module rcv.
+	set ::HLG_rcv_msg $what
+	set ::HLG_rcv_app $who
 
 	# Traitement different selon l'emetteur.
-    switch -- $::HLG_rcv_app \
-				$::APP {
-						# Reception d'un message d'une application HLG distante,
-						# => transfert vers l'application BAS locale.
-						
-						# Recuperation de la valeur du champs application emettrice dans le
-						# message recu.
-						set app [APG_msg_splitstr what $::HLG_rcv_mnemoapp]
+	switch -- $::HLG_rcv_app \
+	$::APP {
+		# Reception d'un message d'une application HLG distante
 
-						# Récupération de la valeur de l'horloge de Lamport de l'émetteur
-						set h_rcv [APG_msg_splitstr what $::HLG_rcv_mnenoclk]
+		# Extraction du contenu
+		set content [APG_msg_splitstr what $::HLG_rc_mnemomtx]
+		# Extraction du destinataire
+		set target [APG_msg_splitstr what $::HLG_rc_mnemotarget]
+		# Message broadcast ?
+		set inter [APG_msg_splitstr what $::HLG_rc_mnemointer]
+		# Valeur de l'horloge contenue dans le message
+		set h_rcv [APG_msg_splitstr what $::HLG_rc_mnemoclk]
+		# Couleur du message reçu pour la sauvegarde
+		set snap_rcv [APG_msg_splitstr what $::HLG_rcv_mnemosnp]
 
-						set snap_rcv [APG_msg_splitstr what $::HLG_rcv_mnemosnp]
- 						
-						# Si la couleur du message est differente de celle du site
-						# alors le site prend un snapshot
-						# La couleur sert juste à définir si le snapshot a deja ete pris ou non
-						if {$snap_rcv != $::HLG_rcv_color_snap} {
-						    HLG_altern_color
-						    HLG_take_snap
-						} 
-						# Mise à jour de l'horloge locale
-						HLG_lam_update $h_rcv
+		# Si le message est destine a ce site (broadcast ou ciblage)
+		# Si la couleur du message est differente de celle du site
+		# alors le site prend un snapshot
+		# La couleur sert juste à définir si le snapshot a deja ete pris ou non
+		if {$snap_rcv != $::HLG_rcv_color_snap} {
+			HLG_altern_color
+			HLG_take_snap
+		}
 
-						# Affichage de debug
-						APG_vrb_dispdebug "received clock: $h_rcv" "APG_receive_whatwho"
- 
-						# Recuperation eventuelle d'autres champs.
+		# Après traitement de l'éventuelle sauvegarde, traitement du corps du message
+		if { $target == $::HLG_tgt_local || $inter == $::HLG_itr_broadcast } then {   
+			switch -- $content \
+			$::HLG_mtx_req {
+				# Cas d'une demande d'entrée en SC d'un site distant
+				HLG_hlg_cs_req $h_rcv $target 
+			} \
+			$::HLG_mtx_lib {
+				# Cas d'une libération de la variable partagée distante, mise à jour
+				set string [APG_msg_splitstr what $::HLG_rc_mnemoscstring]
+				HLG_hlg_cs_lib $h_rcv $target $string
+			} \
+			$::HLG_mtx_acc {
+				# Cas d'un accusé de réception, on le traite
+				HLG_hlg_cs_acc $h_rcv $target 
+			} \
+			$::HLG_mtx_nul {
+				HLG_lam_update $h_rcv
 
-						# Ajout eventuel de traitements ici.
- 
-						# Recuperation du message qui a ete concatene au header
-						# a l'emission. HLG_rcv_mnemoclk doit etre le dernier mnemonique
-						# avant le message concatene. Adapter si des champs ont ete ajoutes.
-						set msg [APG_msg_endstr what $::HLG_rcv_mnenoclk true]
+				# Cas d'un message standard à transmettre à BAS
+				set header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
+				APG_msg_addmsg header $::HLG_rc_mnemotarget $::APG_ident
+				set msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_nul]
+				set payload [APG_msg_splitstr what $::HLG_rc_mnemopayload]
+				set nseq [APG_msg_splitstr what $::HLG_rc_mnemonseq]
+				APG_msg_addmsg msg $::HLG_rc_mnemopayload $payload
+				APG_msg_addmsg msg $::HLG_rc_mnemonseq $nseq
+				set to_send [APG_msg_concatemsg $header $msg]
 
-						# Transfert du message a l'application locale $app
-						HLG_snd_send $msg $app
+				HLG_snd_send $to_send $::HLG_rc_basdefault
+			} \
+			default {
+				APG_vrb_dispwarning "$::APG_ident Message malformé : $content" "APG_receive_whatwho"
+			} 
+		}
+	} \
+	default {
+		# Reception d'un message d'une application autre que HLG (en général BAS)
+		# On regarde si le payload correspond à une demande de snapshot emanant de l'app de base
+		set is_asking_snap [APG_msg_splitstr what $::HLG_rcv_mnemopayload]
+		if {$is_asking_snap == "SNAP"} {
+			APG_vrb_dispwarning "*-SNAPSHOT-*"
+			# On modifie la couleur du site
+			HLG_altern_color
+			HLG_take_snap
+
+			set header [APG_msg_createmsg $::HLG_rcv_mnemoapp $who]
+			APG_msg_addmsg header $::HLG_rcv_mnenoclk [HLG_lam_incrandget]
+
+			# Ajout du champ du snapshot
+			 APG_msg_addmsg header $::HLG_rcv_mnemosnp $::HLG_rcv_color_snap
+			set msg [APG_msg_concatemsg $header $what]
+			HLG_snd_send $msg $::APP
+		} else {
+			set content [APG_msg_splitstr what $::HLG_rc_mnemomtx]
+			# Pas de snapshot, traitement standard
+			switch -- $content \
+				$::HLG_mtx_req {
+					# Demande d'entrée en SC de BAS 
+					HLG_bas_cs_req
+				} \
+				$::HLG_mtx_lib {
+					# Fin de SC de BAS
+					set ::HLG_string [APG_msg_splitstr what $::HLG_rc_mnemoscstring]	
+					HLG_bas_cs_lib
+				} \
+				$::HLG_mtx_nul {
+					# Message sans rapport avec les mutex, à diffuser normalement
+					set header [APG_msg_createmsg $::HLG_rcv_mnemoapp $who]
+					APG_msg_addmsg header $::HLG_rcv_mnemoclk [HLG_lam_incrandget]
+					set msg [APG_msg_concatemsg $header $what]
+					HLG_snd_send $msg $::APP
 				} \
 				default {
-						# Reception d'un message d'une application autre que HLG.
-						# On suppose donc qu'il s'agit d'une application locale dont les
-						# communications sont interceptees par HLG pour realiser un controle
-						# sur son execution.
-						# => transfert vers les applications HLG distantes.
-						
-						# Ajout eventuel de traitements ici.
-
-						# Creation d'un header contenant l'application emettrice.
-						# Utilisation d'un mnemonique pour retrouver ce champs
-						# facilement a la reception.
-						set header [APG_msg_createmsg $::HLG_rcv_mnemoapp $who]
-						
-						# On regarde si le payload correspond à une demande de snapshot
-						# emanant de l'app de base
-						set is_asking_snap [APG_msg_splitstr what $::HLG_rcv_mnemopayload]
-						if {$is_asking_snap == "SNAP"} {
-						    APG_vrb_dispdebug "*-SNAPSHOT-*"
-						    # On modifie la couleur du site
-						    HLG_altern_color
-						    HLG_take_snap
-						} 
-							
-						#Ajout du champ de l'horloge de Lamport dans le header
-						APG_msg_addmsg header $::HLG_rcv_mnenoclk [HLG_lam_incrandget]
-
-						# Ajout du champ du snapshot
-						 APG_msg_addmsg header $::HLG_rcv_mnemosnp $::HLG_rcv_color_snap
-						# Formation du message en concatenant le header et le message recu.
-						set msg [APG_msg_concatemsg $header $what]
-
-						# Appel de la procedure d'emission pour emettre le message msg
-						# vers d'autres applications HLG (cette procedure permet de mettre
-						# a jour l'interface du module snd). NB : $::APP = "HLG".
-						HLG_snd_send $msg $::APP
-	
-				}
-
-
+					APG_vrb_dispwarning "$::APG_ident Message malformé : $content" "APG_receive_whatwho"
+			} 
+		}
+	}
 }

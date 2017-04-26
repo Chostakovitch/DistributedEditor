@@ -27,14 +27,57 @@ set HLG_rc_mnemosnp "hlgsnp"
 # Couleur correspondant a l'algo de lestage pour le snap
 set HLG_rc_color_snap "BLANC"
 
-# Mnemonique pour retrouver le type de message
-set HLG_rc_mnemotype "type"
+set HLG_rc_mnemopayload "payload"
 
-# Indique un type de message standard
-set HLG_rc_typemsg "msg"
+set HLG_rc_mnemonseq "nseq"
 
-# Indique un type de message de demande d'entrée en section critique
-set HLG_rc_typeesc "entersc"
+# Nom par defaut de l'appli distante :
+set HLG_rc_basdefault "BAS"
 
-# Indique un type de message de sortie de section critique
-set HLG_rc_typelsc "leavesc"
+# Valeur initial de l'horloge de Lamport
+set HLG_rc_lamh 0
+
+# Valeur initiale de la chaîne partagée
+set HLG_rc_sharedvalue "Texte à accès exclusif"
+
+# Enumeration des differentes valeurs du champ mutex
+set HLG_mtx_nul "nul"
+# Upd : mise a jour de la SC (HLG <-> BAS)
+set HLG_mtx_upd "upd"
+# Req : demande de SC (HLG <-> HLG et HLG <-> BAS)
+set HLG_mtx_req "req"
+# Lib : liberation de la SC (HLG <-> HLG et HLG <-> BAS)
+set HLG_mtx_lib "lib"
+# Acc : accuse de reception (HLG <-> HLG)
+set HLG_mtx_acc "acc"
+# Deb : debut de SC (HLG <-> BAS)
+set HLG_mtx_deb	"deb"
+
+# Valeur intiale de l'exclusion mutuelle :
+set HLG_rc_mtx_state $HLG_mtx_lib 
+# Valeur initiale de l'estampille locale
+set HLG_rc_mtx_hi 0
+
+# Suffixe d'etat pour chaque site dans le tableau :
+set HLG_mtx_statesuffix "_state"
+# Suffixe de date pour chaque site dans le tableau :
+set HLG_mtx_datesuffix "_date" 
+
+# Mnemonic for transporting the clock
+set HLG_rc_mnemoclk "hlgclk"
+
+# Mnemonique pour le transport du mutex
+set HLG_rc_mnemomtx "hlgmtx"
+
+# Mnemonique pour le transport de la valeur a jour de la SC :
+set HLG_rc_mnemoscstring "scstring"
+
+# Mnemonique pour l'adressage des messages HLG<->HLG
+set HLG_rc_mnemotarget "hgltgt"
+# Adresse locale = id du site (passe en CLI argument) :
+set HLG_tgt_local $APG_ident
+
+# Mnemonique pour le type de communication HLG<->HLG
+set HLG_rc_mnemointer "inter"
+# Mode broadcast (destine a tous les HLG) :
+set HLG_itr_broadcast "bdct"

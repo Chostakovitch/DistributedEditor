@@ -1,0 +1,109 @@
+# bas int
+#    an airplug compatible program
+#    author: Bertrand Ducourthial AT utc.fr, newapp from NET v0.31
+#    license type: free of charge license for academic and research purpose
+#    see license.txt
+### MODULE CRITICAL SECTION ####################################################
+
+### VARIABLES OF THE MODULE ###################################################
+
+# Variable textuelle partagée entre les applications
+set BAS_shared_var $BAS_rc_sharedvalue
+
+# Booléean indiquant si l'application exécute sa section critique
+set BAS_shared_insc false
+
+# Texte du bouton pour entrer en section critique
+set BAS_shared_entersc $BAS_rc_entersc
+
+# Texte du bouton pour sortir de section critique
+set BAS_shared_leavesc $BAS_rc_leavesc
+
+# Valeur par defaut de la mnemonique des messages de requete de section critique :
+set BAS_snd_mnemocsrq $BAS_rc_mnemocsrq
+
+###############################################################################
+
+
+### GRAPHICAL AREA OF THE MODULE ##############################################
+labelframe .shared -pady 2 -padx 2 -text "Variable partagée \[$APP, ident = $APG_ident\]" -fg $APG_int_coltitle
+
+# Bouton "toogle" d'entrée en section critique
+button .shared.btsc \
+		-textvariable BAS_shared_entersc \
+		-activebackground $APG_int_colbutton \
+		-foreground $APG_int_colbutton \
+		-font $APG_int_fnbutton \
+		-width 10 \
+		-command BAS_shared_btsc
+
+# Zone de texte initialement désactivée contenant la variable partagée
+labelframe .shared.var -text "Variable partagée"
+entry .shared.var.v -width 86 -textvariable BAS_shared_var -state disable
+
+# Affichage de la zone section critique
+pack .shared.btsc .shared.var .shared.var.v -side left -fill y -pady 2
+
+###############################################################################
+
+### COMMAND LINE OPTION #######################################################
+
+###############################################################################
+
+
+### PROCEDURES OF THE MODULE ##################################################
+
+# Clic sur le bouton d'entrée/sortie de SC
+proc BAS_shared_btsc { } {
+		if { $::BAS_shared_insc == false } {
+				# Demande d'entrée en section critique
+				.shared.btsc configure -textvariable ::BAS_shared_leavesc -state disable
+
+				# La demande est envoyée et l'interface est bloquée jusqu'à réception
+				BAS_shared_req
+		} else {
+				# Sortie de section critique
+
+				# TODO
+				BAS_shared_free
+				set ::BAS_shared_insc false
+				.shared.var.v configure -state disable
+				.shared.btsc configure -textvariable ::BAS_shared_entersc
+		}
+}
+
+# Début de SC après autorisation
+proc BAS_shared_effectivesc { } {
+	# Entrée effective en section critique
+	.shared.var.v configure -state normal
+	.shared.btsc configure -textvariable ::BAS_shared_leavesc -state normal
+	set ::BAS_shared_insc true
+
+	APG_vrb_dispwarning "$::APG_ident Entrée effective en SC" "BAS_shared_effectivesc"
+}
+
+# Requete de SC
+proc BAS_shared_req { } {
+    set msg [APG_msg_createmsg $::BAS_rc_mnemomtx $::BAS_mtx_req]
+    APG_send_whatwho $msg $::BAS_rc_netdefault
+
+    APG_vrb_dispwarning "$::APG_ident Demande d'entrée en SC" "BAS_shared_req"
+}
+
+# Liberation de SC
+proc BAS_shared_free { } {
+    set msg [APG_msg_createmsg $::BAS_rc_mnemomtx $::BAS_mtx_lib]
+    APG_msg_addmsg msg $::BAS_rc_mnemoscstring $::BAS_shared_var
+    APG_send_whatwho $msg $::BAS_rc_netdefault
+
+    APG_vrb_dispwarning "$::APG_ident Fin de SC" "BAS_shared_free"
+}
+
+# MAJ de la SC apres liberation du mutex par un BAS distant :
+proc BAS_shared_upd { string } {
+    set ::BAS_shared_var $string
+
+    APG_vrb_dispwarning "$::APG_ident Mise à jour distante" "BAS_shared_upd"
+}
+
+###############################################################################

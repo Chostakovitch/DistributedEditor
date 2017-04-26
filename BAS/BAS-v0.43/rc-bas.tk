@@ -4,7 +4,7 @@
 #    license type: free of charge license for academic and research purpose
 #    see license.txt
 ###############################################################################
-APG_vrb_dispnotif "chargement de rc-bas.tk"
+APG_vrb_dispwarning "chargement de rc-bas.tk"
 
 # Message par defaut pour l'emission
 set BAS_rc_msgdefault "message emis par $::APP (ident=$::APG_ident)"
@@ -13,6 +13,9 @@ set BAS_rc_msgdefault "message emis par $::APP (ident=$::APG_ident)"
 #   autre instance de l'application ($APP = "BAS")
 #   NB : peut etre modifie par option --dest=
 set BAS_rc_appdefault $APP
+
+# Nom par defaut de l'appli executant l'algo de controle :
+set BAS_rc_netdefault "HLG"
 
 # Delai par defaut entre deux messages.
 # NB : peut etre modifie par option --delay=
@@ -27,17 +30,33 @@ set BAS_rc_mnemonseq "nseq"
 # Mot cle contenu dans le payload declenchant le snap 
 set BAS_rc_asking_snap "SNAP"
 
-# Mnemonique pour retrouver le type de message
-set BAS_rc_mnemotype "type"
+# Mnemonique pour les requetes de section critique
+set BAS_rc_mnemocsrq "crsq"
 
-# Indique un type de message standard
-set BAS_rc_typemsg "msg"
+# Mnemonique de transport de la valeur a jour de la SC :
+set BAS_rc_mnemoscstring "scstring"
 
-# Indique un type de message de demande d'entrée en section critique
-set BAS_rc_typeesc "entersc"
+# Enumeration des differentes valeurs du champ mutex pour tab
+# Message standard sans rapport avec les mutex
+set BAS_mtx_nul "nul"
 
-# Indique un type de message de sortie de section critique
-set BAS_rc_typelsc "leavesc"
+# Upd : mise a jour de la SC (HLG <-> BAS)
+set BAS_mtx_upd "upd"
+
+# Req : demande de SC (HLG <-> HLG et HLG <-> BAS)
+set BAS_mtx_req "req"
+
+# Lib : liberation de la SC (HLG <-> HLG et HLG <-> BAS)
+set BAS_mtx_lib "lib"
+
+# Deb : debut de SC (HLG <-> BAS)s
+set BAS_mtx_deb "deb"
+
+# Mnemonic for transporting the mutex
+set BAS_rc_mnemomtx "hlgmtx"
+
+# Mnemonique pour l'adressage des messages depuis HLG (necessaire si plusieurs BAS par HLG)
+set BAS_rc_mnemotarget "hgltgt"
 
 # Texte du bouton pour entrer en section critique
 set BAS_rc_entersc "Entrer en SC"

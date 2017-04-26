@@ -19,7 +19,7 @@ set HLG_des_app $APG_msg_unknown
 set HLG_rcv_mnemoapp $HLG_rc_mnemoapp
 
 # Mnémonique pour le header HLG, contenant la valeur de l'horloge de Lamport
-set HLG_rcv_mnenoclk $HLG_rc_mnenoclk
+set HLG_rcv_mnemoclk $HLG_rc_mnemoclk
 
 # Mnémonique Payload
 set HLG_rcv_mnemopayload $HLG_rc_mnemopayload
@@ -98,7 +98,7 @@ proc APG_svg_formatlastdata { } {
 #-----------------------------------------------------------------------------#
 #TODO : rajouter la variable partagee dans le snap
 proc APG_svg_formatfirstdata { } {
-	return "Date $::APG_svg_delim $::HLG_lam_h"
+	return "Date $::APG_svg_delim $::HLG_lam_h $::APG_svg_delim $::HLG_string"
 }
 #-- Procedure HLG_take_snap --------------------------------------------------#
 # Action : gere la realisation du snapshot                                    #
@@ -154,7 +154,8 @@ proc APG_receive_whatwho { what who } {
 		# Si la couleur du message est differente de celle du site
 		# alors le site prend un snapshot
 		# La couleur sert juste à définir si le snapshot a deja ete pris ou non
-		if {$snap_rcv != $::HLG_rcv_color_snap} {
+		if {$snap_rcv != $::HLG_rcv_color_snap && $snap_rcv != "-"} {
+			puts "AAAAAAAAAA $snap_rcv"
 			HLG_altern_color
 			HLG_take_snap
 		}
@@ -199,14 +200,14 @@ proc APG_receive_whatwho { what who } {
 		# Reception d'un message d'une application autre que HLG (en général BAS)
 		# On regarde si le payload correspond à une demande de snapshot emanant de l'app de base
 		set is_asking_snap [APG_msg_splitstr what $::HLG_rcv_mnemopayload]
-		if {$is_asking_snap == "SNAP"} {
+		if { [string compare $is_asking_snap "SNAP"] == 0} {
 			APG_vrb_dispwarning "*-SNAPSHOT-*"
 			# On modifie la couleur du site
 			HLG_altern_color
 			HLG_take_snap
 
 			set header [APG_msg_createmsg $::HLG_rcv_mnemoapp $who]
-			APG_msg_addmsg header $::HLG_rcv_mnenoclk [HLG_lam_incrandget]
+			APG_msg_addmsg header $::HLG_rcv_mnemoclk [HLG_lam_incrandget]
 
 			# Ajout du champ du snapshot
 			 APG_msg_addmsg header $::HLG_rcv_mnemosnp $::HLG_rcv_color_snap

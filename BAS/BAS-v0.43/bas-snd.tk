@@ -127,6 +127,8 @@ proc BAS_snd_autosend { } {
 	# Incrementation du numero de message
 	incr ::BAS_snd_nseq
 
+	set msg [APG_msg_createmsg $::BAS_snd_mnemopayload $::BAS_snd_msg]
+
     # Ajout du contenu du message
     APG_msg_addmsg msg $::BAS_snd_mnemopayload $::BAS_snd_msg
 

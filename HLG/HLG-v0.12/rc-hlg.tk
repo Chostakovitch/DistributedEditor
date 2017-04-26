@@ -13,7 +13,7 @@ set HLG_rc_mnemoapp "apphlg"
 set HLG_rc_lamh 0
 
 # Mnémonique pour le header HLG, contenant la valeur de l'horloge de Lamport
-set HLG_rc_mnenoclk "hlgclk"
+set HLG_rc_mnemoclk "hlgclk"
 
 # Mnémonique Payload
 set HLG_rc_mnemopayload "payload"

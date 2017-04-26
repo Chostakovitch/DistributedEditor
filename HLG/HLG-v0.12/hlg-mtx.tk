@@ -24,7 +24,7 @@ proc HLG_bas_cs_req { } {
 
     # Changement d'etat : on passe en requete
     set ::tab($::APG_ident$::HLG_mtx_statesuffix) $::HLG_mtx_req
-    set ::tab($::APG_ident$::HLG_mtx_datesuffix) [HLG_lam_incrandget]
+    set ::tab($::APG_ident$::HLG_mtx_datesuffix) [HLG_vec_incrandget]
 
     # Mise en place d'un header 
     set req_header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
@@ -33,7 +33,7 @@ proc HLG_bas_cs_req { } {
     # Broadcast (destine a tous les HLG) 
     APG_msg_addmsg req_header $::HLG_rc_mnemointer $::HLG_itr_broadcast
     # Insertion de l'horloge dans le message de requete
-    APG_msg_addmsg req_header $::HLG_rc_mnemoclk $::HLG_lam_h
+    APG_msg_addmsg req_header $::HLG_rc_mnemoclk [HLG_vec_serialize]
 
     # Creation du message de requete 
     set req_msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_req]
@@ -51,7 +51,7 @@ proc HLG_bas_cs_lib { } {
 
     # Changement d'etat : on passe en liberation du mutex
     set ::tab($::APG_ident$::HLG_mtx_statesuffix) $::HLG_mtx_lib
-    set ::tab($::APG_ident$::HLG_mtx_datesuffix) [HLG_lam_incrandget]
+    set ::tab($::APG_ident$::HLG_mtx_datesuffix) [HLG_vec_incrandget]
 
     # Creation du header
     set lib_header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
@@ -60,7 +60,7 @@ proc HLG_bas_cs_lib { } {
     # Broadcast (destine a tous les HLG) 
     APG_msg_addmsg lib_header $::HLG_rc_mnemointer $::HLG_itr_broadcast
     # Insertion de l'horloge dans le message de requete
-    APG_msg_addmsg lib_header $::HLG_rc_mnemoclk $::HLG_lam_h
+    APG_msg_addmsg lib_header $::HLG_rc_mnemoclk [HLG_vec_serialize]
 
     # Creation du message de liberation
     set lib_msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_lib]
@@ -79,12 +79,12 @@ proc HLG_bas_cs_lib { } {
 # GARDE : Reception d'un message de type demande d'entrée en SC (d'une application distante)
 proc HLG_hlg_cs_req { h from } {
 
-    # MAJ de l'estampille locale
-    HLG_lam_update $h
+    # MAJ de l'horloge vectorielle locale
+    HLG_vec_update $h
 
-    # MAJ de l'etat et de l'horloge du site distant 
+    # MAJ de l'etat et de l'estampille du site distant 
     set ::tab($from$::HLG_mtx_statesuffix) $::HLG_mtx_req
-    set ::tab($from$::HLG_mtx_datesuffix)  $h
+    set ::tab($from$::HLG_mtx_datesuffix) [dict get $h $from]
 
     # Creation d'un header pour l'accuse de reception 
     set acc_header [APG_msg_createmsg $::HLG_rc_mnemoapp $::APP]
@@ -92,8 +92,8 @@ proc HLG_hlg_cs_req { h from } {
     # Le destinataire de l'accuse est l'emetteur de la requete 
     APG_msg_addmsg acc_header $::HLG_rc_mnemotarget $from
 
-    # Ajout de l'estampille locale 
-    APG_msg_addmsg acc_header $::HLG_rc_mnemoclk $::HLG_lam_h
+    # Ajout de l'horloge vectorielle locale 
+    APG_msg_addmsg acc_header $::HLG_rc_mnemoclk [HLG_vec_serialize]
 
     # Coeur du message (accuse de reception)
     set acc_msg [APG_msg_createmsg $::HLG_rc_mnemomtx $::HLG_mtx_acc]
@@ -105,7 +105,7 @@ proc HLG_hlg_cs_req { h from } {
     APG_vrb_dispwarning "$::APG_ident Demande d'entrée en SC du site $from prise en compte" "HLG_hlg_cs_req"
 
     # Site demandeur ayant la plus petite estampille
-    set min [HLG_lam_tab_min]
+    set min [HLG_vec_tab_min]
     if { $::tab($::APG_ident$::HLG_mtx_statesuffix) == $::HLG_mtx_req
       && 0 == [string compare $::APG_ident$::HLG_mtx_datesuffix $min] } then {
     	# BAS peut entre en SC
@@ -128,16 +128,16 @@ proc HLG_hlg_cs_req { h from } {
 proc HLG_hlg_cs_lib { h from string } {
 
     # MAJ de l'estampille locale
-    HLG_lam_update $h
+    HLG_vec_update $h
 
     # MAJ de l'etat du site informant de la liberation
     set ::tab($from$::HLG_mtx_statesuffix) $::HLG_mtx_lib
-    set ::tab($from$::HLG_mtx_datesuffix)  $h
+    set ::tab($from$::HLG_mtx_datesuffix) [dict get $h $from]
 
     APG_vrb_dispwarning "$::APG_ident Libération de la ressource par $from prise en compte" "HLG_hlg_cs_lib"
 
     # Site demandeur ayant la plus petite estampille
-    set min [HLG_lam_tab_min]
+    set min [HLG_vec_tab_min]
     if { $::tab($::APG_ident$::HLG_mtx_statesuffix) == $::HLG_mtx_req
       && 0 == [string compare $::APG_ident$::HLG_mtx_datesuffix $min] } then {
     	# BAS peut entre en SC
@@ -178,18 +178,18 @@ proc HLG_hlg_cs_lib { h from string } {
 proc HLG_hlg_cs_acc { h from } {
 
     # MAJ de l'estampille locale :
-    HLG_lam_update $h
+    HLG_vec_update $h
 
     # On n'ecrase pas une requete par un etat acc :
     if { $::tab($from$::HLG_mtx_statesuffix) != $::HLG_mtx_req } {
-	set ::tab($from$::HLG_mtx_statesuffix) $::HLG_mtx_acc
-	set ::tab($from$::HLG_mtx_datesuffix)  $h
+    	set ::tab($from$::HLG_mtx_statesuffix) $::HLG_mtx_acc
+    	set ::tab($from$::HLG_mtx_datesuffix) [dict get $h $from]
     }
 
     APG_vrb_dispwarning "$::APG_ident Réception d'un accusé de réception" "HLG_hlg_cs_acc"
 
     # Site demandeur ayant la plus petite estampille
-    set min [HLG_lam_tab_min]
+    set min [HLG_vec_tab_min]
     if { $::tab($::APG_ident$::HLG_mtx_statesuffix) == $::HLG_mtx_req
       && 0 == [string compare $::APG_ident$::HLG_mtx_datesuffix $min] } then {
     	# BAS peut entre en SC

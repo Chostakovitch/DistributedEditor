@@ -15,17 +15,14 @@ package require math
 # Initialement, ne contient que l'horloge locale
 dict set HLG_vec_h $APG_ident $HLG_rc_lamh
 
-# Contient une copie de l'horloge locale pour faciliter la lisibilité du code
-set HLG_lam_h $HLG_rc_lamh
-
 ###############################################################################
  
 ### GRAPHICAL AREA OF THE MODULE ##############################################
 labelframe .lam -pady 2 -padx 2 \
-    -text "Lamport's clock \[$APP, ident = $APG_ident\]"  -fg $APG_int_coltitle
+    -text "Horloge vectorielle \[$APP, ident = $APG_ident\]"  -fg $APG_int_coltitle
 
-label .lam.t -text "Local Lamport's clock = "
-label .lam.h -textvariable HLG_lam_h -width 4 -anchor w
+label .lam.t -text "Horloge vectorielle courante = "
+label .lam.h -textvariable HLG_vec_h -width 50 -anchor w
 pack .lam.t .lam.h -side left
 
 ###############################################################################
@@ -38,7 +35,7 @@ foreach option $APG_lstargs {
  
     switch -- $name {
     	--hlg-hini {
-    	    if { $value == "" } {
+    	    if { $value == "" } then {
     		APG_vrb_dispwarning "option $name found without argument ; ignored" "hlg-lam"
     	    } else {
     		set HLG_lam_h $value
@@ -58,16 +55,16 @@ proc HLG_vec_tab_min { } {
     #Valeurs 2 à 2 de la file d'attente
     foreach {key value} [array get ::tab] {
         # Vérification de principe
-    	if { [string is entier $value] } {
+    	if { [string is entier $value] } then {
             # Extraction du nom du site
     	    set ident [lindex [split $key _ ] 0]
 
             # Si on trouve un site demandeur de plus petite estampille, on met à jour
-    	    if { $::tab($ident$::HLG_mtx_statesuffix) == $::HLG_mtx_req } {
-        		if { $value < $min_value } {
+    	    if { $::tab($ident$::HLG_mtx_statesuffix) == $::HLG_mtx_req } then {
+        		if { $value < $min_value } then {
         		    set min_value $value
         		    set min_key $key
-        		} elseif { $value == $min_value && 0 > [string compare $key $min_key] } {
+        		} elseif { $value == $min_value && 0 > [string compare $key $min_key] } then {
         		    set min_value $value
         		    set min_key $key
         		}
@@ -80,19 +77,17 @@ proc HLG_vec_tab_min { } {
  
 ### PROCEDURES OF THE MODULE ##################################################
 #-- Procedure HLG_vec_incrandget ---------------------------------------------#
-# Action : incremente the clock and return it                                 #
+# Action : incrémente l'estampille du site local dans l'horloge vectorielle   #
 # Input  : nothing                                                            #
-# Output : clock                                                              #
+# Output : estampille du site local                                           #
 #-----------------------------------------------------------------------------#
 proc HLG_vec_incrandget { } {
     dict incr $::HLG_vec_h $::APG_ident
-    incr $::HLG_lam_h
-    return $::HLG_lam_h
+    return [dict get $::HLG_vec_h $::APG_ident]
 }
 
 proc HLG_vec_incr { } {
     dict incr $::HLG_vec_h $::APG_ident
-    incr $::HLG_lam_h
 }
 
 #-- Procedure HLG_vec_update -------------------------------------------------#
@@ -131,7 +126,10 @@ proc HLG_vec_serialize { } {
     set serial ""
     foreach {key value} $::HLG_vec_h {
         # Codage décidé pour la sérialisation
-        append $serial "$key#$value_"
+        append $serial "$key"
+        append $serial "#"
+        append $serial "$value"
+        append $serial "_"
     }
     # Caractère restant
     string trimright $serial "_"
@@ -145,10 +143,11 @@ proc HLG_vec_serialize { } {
 #--------------------------------------------------------------------------------#
 proc HLG_vec_deserialize { serial } {
     # Itération sur les couples du sérial et construction d'un dictionnaire
+    set vec [dict create]
     set couples [split $serial "_"]
     foreach couple $couples {
         set fields [split $couple "#"]
-        dict set $vec [lindex $fields 0] [lindex $fields 1]
+        dict set vec [lindex $fields 0] [lindex $fields 1]
     }
     return $vec
 }

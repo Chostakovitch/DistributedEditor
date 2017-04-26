@@ -1,0 +1,156 @@
+#    hlg
+#    an airplug compatible program
+#    author: Bertrand Ducourthial AT utc.fr, newapp from NET v0.31
+#    license type: free of charge license for academic and research purpose
+#    see license.txt
+### MODULE HORLOGE VECTORIELLE ################################################
+
+package require math
+
+### VARIABLES OF THE MODULE ###################################################
+
+# Dictionnaire contenant les estampilles pour chaque site selon son identifiant
+# On choisit de ne pas imposer de taille : si un message arrive avec un identifiant
+# inconnu, on le rajoute simplement au dictionnaire et on en tient compte. 
+# Initialement, ne contient que l'horloge locale
+dict set HLG_vec_h $APG_ident $HLG_rc_lamh
+
+# Contient une copie de l'horloge locale pour faciliter la lisibilité du code
+set HLG_lam_h $HLG_rc_lamh
+
+###############################################################################
+ 
+### GRAPHICAL AREA OF THE MODULE ##############################################
+labelframe .lam -pady 2 -padx 2 \
+    -text "Lamport's clock \[$APP, ident = $APG_ident\]"  -fg $APG_int_coltitle
+
+label .lam.t -text "Local Lamport's clock = "
+label .lam.h -textvariable HLG_lam_h -width 4 -anchor w
+pack .lam.t .lam.h -side left
+
+###############################################################################
+ 
+### COMMAND LINE OPTION #######################################################
+ 
+foreach option $APG_lstargs {
+    set name [lindex [split $option "="] 0]
+    set value [lindex [split $option "="] 1]
+ 
+    switch -- $name {
+    	--hlg-hini {
+    	    if { $value == "" } {
+    		APG_vrb_dispwarning "option $name found without argument ; ignored" "hlg-lam"
+    	    } else {
+    		set HLG_lam_h $value
+    		APG_vrb_dispwarning "option $option found; initial Lamport's clock value=$value" "hlg-lam"
+                }
+    	}
+    }
+} 
+
+###############################################################################
+
+# Parcourt la file d'attente et détermine le site => demandeur <= ayant la plus petite estampille
+proc HLG_vec_tab_min { } {
+    set min_key $::APG_ident$::HLG_mtx_datesuffix
+    set min_value $::tab($::APG_ident$::HLG_mtx_datesuffix)
+
+    #Valeurs 2 à 2 de la file d'attente
+    foreach {key value} [array get ::tab] {
+        # Vérification de principe
+    	if { [string is entier $value] } {
+            # Extraction du nom du site
+    	    set ident [lindex [split $key _ ] 0]
+
+            # Si on trouve un site demandeur de plus petite estampille, on met à jour
+    	    if { $::tab($ident$::HLG_mtx_statesuffix) == $::HLG_mtx_req } {
+        		if { $value < $min_value } {
+        		    set min_value $value
+        		    set min_key $key
+        		} elseif { $value == $min_value && 0 > [string compare $key $min_key] } {
+        		    set min_value $value
+        		    set min_key $key
+        		}
+    	    }
+    	}
+    } 
+    APG_vrb_dispdebug "$::APG_ident Site demandeur de plus petite estampille : $min_key" "HLG_vec_tab_min"
+    return $min_key
+}
+ 
+### PROCEDURES OF THE MODULE ##################################################
+#-- Procedure HLG_vec_incrandget ---------------------------------------------#
+# Action : incremente the clock and return it                                 #
+# Input  : nothing                                                            #
+# Output : clock                                                              #
+#-----------------------------------------------------------------------------#
+proc HLG_vec_incrandget { } {
+    dict incr $::HLG_vec_h $::APG_ident
+    incr $::HLG_lam_h
+    return $::HLG_lam_h
+}
+
+proc HLG_vec_incr { } {
+    dict incr $::HLG_vec_h $::APG_ident
+    incr $::HLG_lam_h
+}
+
+#-- Procedure HLG_vec_update -------------------------------------------------#
+# Action : update the vector clock, h <- MAX(h_rcv, h) [+ 1 si site courant]  #
+# Input  : received vector clock                                              #
+# Output : nothing                                                            #
+#-----------------------------------------------------------------------------#
+proc HLG_vec_update { h_rcv } {
+    # Récupération de l'horloge vectorielle distante
+    set vec [HLG_vec_deserialize h_rcv]
+
+    # On itère sur toutes les estampilles distantes
+    foreach {key value} $vec {
+        # On découvre un site, on le rajoute
+        if {[dict exists $::HLG_vec_h $key] == 0} {
+            dict set $::HLG_vec_h $key $value
+        } else {
+            # On connaît déjà le site, on compare les estampilles
+            if {[string compare $key $::APG_ident] == 0} {
+                # Cas où il s'agit du site courant, on augmente juste l'estampille
+                HLG_vec_incr
+            } else {
+                # Cas d'un site distant connu, on met à jour selon le maximum des estampilles
+                dict set $::HLG_vec_h $key [::math::max [dict get $::HLG_vec_h $key] $value]
+            }
+        }
+    }
+}
+
+#-- Procedure HLG_vec_serialize -------------------------------------------------#
+# Action : Sérialise l'horloge vectorielle pour envoi (forme clé#valeur_clé....) #
+# Input  : rien                                                                  #
+# Output : horloge sérialisée                                                    #
+#--------------------------------------------------------------------------------#
+proc HLG_vec_serialize { } {
+    set serial ""
+    foreach {key value} $::HLG_vec_h {
+        # Codage décidé pour la sérialisation
+        append $serial "$key#$value_"
+    }
+    # Caractère restant
+    string trimright $serial "_"
+    return $serial
+}  
+
+#-- Procedure HLG_vec_deserialize -----------------------------------------------#
+# Action : Désérialise une horloge vectorielle                                   #
+# Input  : sérial                                                                #
+# Output : dictionnaire                                                          #
+#--------------------------------------------------------------------------------#
+proc HLG_vec_deserialize { serial } {
+    # Itération sur les couples du sérial et construction d'un dictionnaire
+    set couples [split $serial "_"]
+    foreach couple $couples {
+        set fields [split $couple "#"]
+        dict set $vec [lindex $fields 0] [lindex $fields 1]
+    }
+    return $vec
+}
+
+###############################################################################

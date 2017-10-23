@@ -1,5 +1,5 @@
 # DistributedEditor
-Distributed editing prototype with wave algorithms, critical section and snapshot
+Distributed text editing prototype with wave algorithms, critical section and snapshot
 
 ## Principe
 
@@ -8,7 +8,7 @@ Ce projet se base sur la suite logicielle [Airplug](https://airplug.hds.utc.fr/d
 Les fonctionnalités proposées par le prototype sont :
 * Communication avec un sous-groupe des machines ;
 * Edition d'un texte avec exclusion mutuelle automatique ;
-* Snapshot de l'état du système ;
+* Snapshot de l'état du système.
 
 ## Algorithmes
 

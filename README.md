@@ -22,7 +22,10 @@ Les algorithmes utilisés pour ce prototypes sont issus de l'algorithmie distrib
   
 ## Utilisation
 
-`cd bin; source config.sh` configure l'environnement. Le script `bin/run.sh` lance les interfaces graphiques de démonstration.
+* Pré-requis : distribution TCL avec le package math (par exemple ActiveTcl).
+* Configuration : du dossier `bin`, `source config.sh`.
+* Lancer l'application : du dossier `bin`, `./run.sh`.
+* Les snapshots sont enregistrées dans `output`.
 
 L'interface est divisée en différentes zones configurables via la barre de menu. Une première zone permet d'envoyer des messages aux autres applications.
 

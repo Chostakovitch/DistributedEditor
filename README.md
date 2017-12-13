@@ -22,7 +22,7 @@ Les algorithmes utilisés pour ce prototypes sont issus de l'algorithmie distrib
   
 ## Utilisation
 
-Le dosier `bin` contient les binaires du projet. Le script `setup.sh` configure l'environnement. Le script `run.sh` lance les interfaces graphiques de démonstration.
+`cd bin; source config.sh` configure l'environnement. Le script `bin/run.sh` lance les interfaces graphiques de démonstration.
 
 L'interface est divisée en différentes zones configurables via la barre de menu. Une première zone permet d'envoyer des messages aux autres applications.
 

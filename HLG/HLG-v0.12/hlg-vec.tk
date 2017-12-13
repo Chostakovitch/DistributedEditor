@@ -55,7 +55,7 @@ proc HLG_vec_tab_min { } {
     #Valeurs 2 à 2 de la file d'attente
     foreach {key value} [array get ::tab] {
         # Vérification de principe
-    	if { [string is entier $value] } then {
+    	if { [string is integer $value] } then {
             # Extraction du nom du site
     	    set ident [lindex [split $key _ ] 0]
 
